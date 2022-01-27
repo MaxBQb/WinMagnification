@@ -1,30 +1,21 @@
 import unittest
+import concurrent.futures
 
 import win_magnification as mag
 
 
-class InitTest(unittest.TestCase):
-    def tearDown(self):
+class InitUninitTest(unittest.TestCase):
+    def test_init_uninit(self):
+        mag.initialize()
         mag.uninitialize()
 
-    def test_initialize(self):
-        self.assertTrue(mag.initialize())
-
     def test_initialize_twice(self):
-        self.assertTrue(mag.initialize())
-        self.assertTrue(mag.initialize())
-
-
-class UnInitTest(unittest.TestCase):
-    def setUp(self):
+        mag.initialize()
         mag.initialize()
 
-    def test_uninitialize(self):
-        self.assertTrue(mag.uninitialize())
-
     def test_uninitialize_twice(self):
-        self.assertTrue(mag.uninitialize())
-        self.assertTrue(mag.uninitialize())
+        mag.uninitialize()
+        mag.uninitialize()
 
 
 class NoControlWindowTest(unittest.TestCase):
@@ -38,11 +29,18 @@ class NoControlWindowTest(unittest.TestCase):
         self.assertEqual(mag.get_fullscreen_color_effect(), mag.IDENTITY_MATRIX)
 
     def test_set_fullscreen_color_effect(self):
-        self.assertTrue(mag.set_fullscreen_color_effect(mag.COLOR_INVERSION_EFFECT))
+        mag.set_fullscreen_color_effect(mag.COLOR_INVERSION_EFFECT)
         self.assertEqual(mag.get_fullscreen_color_effect(), mag.COLOR_INVERSION_EFFECT)
         # Note: Set delay with time.sleep to see visual difference
-        self.assertTrue(mag.set_fullscreen_color_effect(mag.NO_EFFECT))
+        mag.set_fullscreen_color_effect(mag.NO_EFFECT)
         self.assertEqual(mag.get_fullscreen_color_effect(), mag.NO_EFFECT)
+
+    def test_set_fullscreen_color_effect_threaded(self):
+        # TODO: Prevent exception
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(self.test_set_fullscreen_color_effect)
+            concurrent.futures.as_completed([future])
+            future.result()
 
 
 if __name__ == '__main__':

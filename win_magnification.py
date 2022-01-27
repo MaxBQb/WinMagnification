@@ -5,7 +5,6 @@ Header: https://searchcode.com/codesearch/view/66549806/
 """
 from ctypes import *
 from ctypes.wintypes import *
-from typing import Optional
 
 _DLL = WinDLL('magnification.dll')
 
@@ -82,6 +81,13 @@ COLOR_INVERSION_EFFECT: ColorMatrix = [
 
 
 # Internal functions
+def _raise_win_errors(win_function):
+    def wrapper(*args, **kwargs):
+        if not win_function(*args, **kwargs):
+            raise WinError()
+    return wrapper
+
+
 def _get_empty_matrix(size: int):
     return [[0]*size for _ in range(size)]
 
@@ -90,51 +96,49 @@ def _to_py_matrix(c_matrix: Array[Array]):
     return list(map(list, c_matrix))
 
 
-def _to_с_matrix(matrix: list[list], content_type=c_float):
+def _to_c_matrix(matrix: list[list], content_type=c_float):
     return (content_type*len(matrix)*len(matrix))(*[
         (content_type*len(row))(*row) for row in matrix
     ])
 
 
 # Functions
-def initialize() -> bool:
+@_raise_win_errors
+def initialize() -> None:
     """
     Creates and initializes the magnifier run-time objects.
-
-    :return: True if successful.
     """
     return _DLL.MagInitialize()
 
 
-def uninitialize() -> bool:
+@_raise_win_errors
+def uninitialize() -> None:
     """
     Destroys the magnifier run-time objects.
-
-    :return: True if successful.
     """
     return _DLL.MagUninitialize()
 
 
-def set_fullscreen_color_effect(effect: ColorMatrix):
+@_raise_win_errors
+def set_fullscreen_color_effect(effect: ColorMatrix) -> None:
     """
     Changes the color transformation matrix associated with the full-screen magnifier.
 
     :param effect: The new color transformation matrix.
     This parameter must not be None.
-    :return: True if successful.
     """
-    return _DLL.MagSetFullscreenColorEffect(_to_с_matrix(effect))
+    return _DLL.MagSetFullscreenColorEffect(_to_c_matrix(effect))
 
 
-def get_fullscreen_color_effect() -> Optional[ColorMatrix]:
+def get_fullscreen_color_effect() -> ColorMatrix:
     """
     Retrieves the color transformation matrix associated with the full-screen magnifier.
 
     :return: The color transformation matrix, or the identity matrix if no color effect has been set.
     """
-    result = _to_с_matrix(_get_empty_matrix(5))
-    if _DLL.MagGetFullscreenColorEffect(result):
-        return _to_py_matrix(result)
+    result = _to_c_matrix(_get_empty_matrix(5))
+    _raise_win_errors(_DLL.MagGetFullscreenColorEffect(result))
+    return _to_py_matrix(result)
 
 
 # Compatability with original function names
