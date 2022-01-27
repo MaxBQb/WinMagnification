@@ -3,10 +3,12 @@ Author: MaxBQb
 Docs: https://docs.microsoft.com/en-us/windows/win32/api/_magapi/
 Header: https://searchcode.com/codesearch/view/66549806/
 """
+import threading
 from ctypes import *
 from ctypes.wintypes import *
 
 _DLL = WinDLL('magnification.dll')
+_current_thread = None
 
 
 # C Constants (feel free to use)
@@ -88,6 +90,18 @@ def _raise_win_errors(win_function):
     return wrapper
 
 
+def _reload_on_thread_changed(win_function):
+    def wrapper(*args, **kwargs):
+        global _current_thread
+        current_thread = threading.current_thread().name
+        if current_thread != _current_thread:
+            _current_thread = current_thread
+            uninitialize()
+            initialize()
+        return win_function(*args, **kwargs)
+    return wrapper
+
+
 def _get_empty_matrix(size: int):
     return [[0]*size for _ in range(size)]
 
@@ -119,6 +133,7 @@ def uninitialize() -> None:
     return _DLL.MagUninitialize()
 
 
+@_reload_on_thread_changed
 @_raise_win_errors
 def set_fullscreen_color_effect(effect: ColorMatrix) -> None:
     """
@@ -130,6 +145,7 @@ def set_fullscreen_color_effect(effect: ColorMatrix) -> None:
     return _DLL.MagSetFullscreenColorEffect(_to_c_matrix(effect))
 
 
+@_reload_on_thread_changed
 def get_fullscreen_color_effect() -> ColorMatrix:
     """
     Retrieves the color transformation matrix associated with the full-screen magnifier.

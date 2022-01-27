@@ -34,7 +34,6 @@ class NoControlWindowTest(unittest.TestCase):
         self.assertEqual(self.mag.fullscreen_color_effect, mag.NO_EFFECT)
 
     def test_set_fullscreen_color_effect_threaded(self):
-        # TODO: Prevent exception
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
             future = executor.submit(self.test_set_fullscreen_color_effect)
             concurrent.futures.as_completed([future])
