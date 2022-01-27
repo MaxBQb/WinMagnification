@@ -19,21 +19,19 @@ class InitUninitTest(unittest.TestCase):
 
 
 class NoControlWindowTest(unittest.TestCase):
-    def setUp(self):
-        mag.initialize()
-
-    def tearDown(self):
-        mag.uninitialize()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.mag = mag.WinMagnificationAPI()
 
     def test_get_fullscreen_color_effect(self):
-        self.assertEqual(mag.get_fullscreen_color_effect(), mag.IDENTITY_MATRIX)
+        self.assertEqual(self.mag.fullscreen_color_effect, mag.IDENTITY_MATRIX)
 
     def test_set_fullscreen_color_effect(self):
-        mag.set_fullscreen_color_effect(mag.COLOR_INVERSION_EFFECT)
-        self.assertEqual(mag.get_fullscreen_color_effect(), mag.COLOR_INVERSION_EFFECT)
+        self.mag.fullscreen_color_effect = mag.COLOR_INVERSION_EFFECT
+        self.assertEqual(self.mag.fullscreen_color_effect, mag.COLOR_INVERSION_EFFECT)
         # Note: Set delay with time.sleep to see visual difference
-        mag.set_fullscreen_color_effect(mag.NO_EFFECT)
-        self.assertEqual(mag.get_fullscreen_color_effect(), mag.NO_EFFECT)
+        self.mag.fullscreen_color_effect = mag.NO_EFFECT
+        self.assertEqual(self.mag.fullscreen_color_effect, mag.NO_EFFECT)
 
     def test_set_fullscreen_color_effect_threaded(self):
         # TODO: Prevent exception

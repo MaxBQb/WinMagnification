@@ -146,3 +146,17 @@ MagInitialize = initialize
 MagUninitialize = uninitialize
 MagSetFullscreenColorEffect = set_fullscreen_color_effect
 MagGetFullscreenColorEffect = get_fullscreen_color_effect
+
+
+# Object-Oriented Interface
+class WinMagnificationAPI:
+    @property
+    def fullscreen_color_effect(self):
+        return get_fullscreen_color_effect()
+
+    @fullscreen_color_effect.setter
+    def fullscreen_color_effect(self, value: ColorMatrix):
+        set_fullscreen_color_effect(value)
+
+    def __del__(self):
+        uninitialize()
