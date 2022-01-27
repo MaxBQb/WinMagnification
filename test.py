@@ -23,9 +23,6 @@ class NoControlWindowTest(unittest.TestCase):
         super().__init__(*args, **kwargs)
         self.mag = mag.WinMagnificationAPI()
 
-    def test_get_fullscreen_color_effect(self):
-        self.assertEqual(self.mag.fullscreen_color_effect, mag.IDENTITY_MATRIX)
-
     def test_set_fullscreen_color_effect(self):
         self.mag.fullscreen_color_effect = mag.COLOR_INVERSION_EFFECT
         self.assertEqual(self.mag.fullscreen_color_effect, mag.COLOR_INVERSION_EFFECT)
@@ -38,6 +35,20 @@ class NoControlWindowTest(unittest.TestCase):
             future = executor.submit(self.test_set_fullscreen_color_effect)
             concurrent.futures.as_completed([future])
             future.result()
+
+    def test_set_fullscreen_transform(self):
+        new_transform = (1.5, (0, 0))
+        self.mag.fullscreen_transform = new_transform
+        self.assertEqual(
+            self.mag.fullscreen_transform,
+            new_transform
+        )
+        # Note: Set delay with time.sleep to see visual difference
+        self.mag.fullscreen_transform = new_transform = 1, (0, 0)
+        self.assertEqual(
+            self.mag.fullscreen_transform,
+            new_transform
+        )
 
 
 if __name__ == '__main__':

@@ -37,6 +37,13 @@ _DLL.MagSetFullscreenColorEffect.restype = BOOL
 _DLL.MagSetFullscreenColorEffect.argtypes = (_PMAGCOLOREFFECT,)
 
 
+_DLL.MagSetFullscreenTransform.restype = BOOL
+_DLL.MagSetFullscreenTransform.argtypes = (c_float, c_int, c_int)
+
+_DLL.MagGetFullscreenTransform.restype = BOOL
+_DLL.MagGetFullscreenTransform.argtypes = (POINTER(c_float), POINTER(c_int), POINTER(c_int))
+
+
 # Type hints
 ColorMatrix = list[
     list[float, float, float, float, float],
@@ -157,11 +164,52 @@ def get_fullscreen_color_effect() -> ColorMatrix:
     return _to_py_matrix(result)
 
 
+@_reload_on_thread_changed
+@_raise_win_errors
+def set_fullscreen_transform(magnification_level: float, offset: tuple[int, int]):
+    """
+    Changes the magnification settings for the full-screen magnifier.
+
+    :param magnification_level: The new magnification factor for the full-screen magnifier.
+    1.0 <= magnification_level <= 4096.0. If this value is 1.0, the screen content is not magnified and no offsets are applied.
+    :param offset:
+    The offset is relative to the upper-left corner of the primary monitor, in unmagnified coordinates.
+    -262144 <= (x, y) <= 262144.
+    """
+    return _DLL.MagSetFullscreenTransform(magnification_level, *offset)
+
+
+@_reload_on_thread_changed
+def get_fullscreen_transform() -> tuple[float, tuple[int, int]]:
+    """
+    Retrieves the magnification settings for the full-screen magnifier.
+
+    :return: Current magnification factor and offset (x, y)
+    The current magnification factor for the full-screen magnifier:
+        - 1.0 = screen content is not being magnified.
+        - > 1.0 = scale factor for magnification.
+        - < 1.0 is not valid.
+    The offset is relative to the upper-left corner of the primary monitor, in unmagnified coordinates.
+    """
+    magnification_level = pointer(c_float())
+    offset_x = pointer(c_int())
+    offset_y = pointer(c_int())
+    _raise_win_errors(_DLL.MagGetFullscreenTransform(magnification_level, offset_x, offset_y))
+    return (
+        magnification_level.contents.value, (
+            offset_x.contents.value,
+            offset_y.contents.value,
+        )
+    )
+
+
 # Compatability with original function names
 MagInitialize = initialize
 MagUninitialize = uninitialize
 MagSetFullscreenColorEffect = set_fullscreen_color_effect
 MagGetFullscreenColorEffect = get_fullscreen_color_effect
+MagSetFullscreenTransform = set_fullscreen_transform
+MagGetFullscreenTransform = get_fullscreen_transform
 
 
 # Object-Oriented Interface
@@ -173,6 +221,14 @@ class WinMagnificationAPI:
     @fullscreen_color_effect.setter
     def fullscreen_color_effect(self, value: ColorMatrix):
         set_fullscreen_color_effect(value)
+
+    @property
+    def fullscreen_transform(self):
+        return get_fullscreen_transform()
+
+    @fullscreen_transform.setter
+    def fullscreen_transform(self, value: tuple[float, tuple[int, int]]):
+        set_fullscreen_transform(*value)
 
     def __del__(self):
         uninitialize()
