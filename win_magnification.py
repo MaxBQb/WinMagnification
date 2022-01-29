@@ -3,9 +3,12 @@ Author: MaxBQb
 Docs: https://docs.microsoft.com/en-us/windows/win32/api/_magapi/
 Header: https://searchcode.com/codesearch/view/66549806/
 """
+import contextlib
 import threading
 from ctypes import *
 from ctypes.wintypes import *
+from functools import partial, wraps
+from typing import Callable
 
 _DLL = WinDLL('magnification.dll')
 _current_thread = None
@@ -89,22 +92,25 @@ COLOR_INVERSION_EFFECT: ColorMatrix = [
 ]
 
 
+# Defaults
+DEFAULT_COLOR_EFFECT = NO_EFFECT
+DEFAULT_FULLSCREEN_TRANSFORM = (1.0, (0, 0))
+
+
 # Internal functions
-def _raise_win_errors(win_function):
+def _raise_win_errors(win_function: Callable[..., bool]):
+    @wraps(win_function)
     def wrapper(*args, **kwargs):
         if not win_function(*args, **kwargs):
             raise WinError()
     return wrapper
 
 
-def _reload_on_thread_changed(win_function):
+def _require_single_thread(win_function: Callable):
+    @wraps(win_function)
     def wrapper(*args, **kwargs):
-        global _current_thread
-        current_thread = threading.current_thread().name
-        if current_thread != _current_thread:
-            _current_thread = current_thread
-            uninitialize()
-            initialize()
+        if threading.current_thread().ident != _current_thread:
+            raise RuntimeError("Magnification API must be accessed from a single thread!")
         return win_function(*args, **kwargs)
     return wrapper
 
@@ -132,6 +138,17 @@ def initialize() -> None:
     return _DLL.MagInitialize()
 
 
+def safe_initialize():
+    global _current_thread
+    current_thread = threading.current_thread().ident
+    if current_thread == _current_thread:
+        raise RuntimeError("Magnification API already initialized!")
+    if _current_thread is not None:
+        raise RuntimeError("Magnification API must be accessed from a single thread!")
+    initialize()
+    _current_thread = current_thread
+
+
 @_raise_win_errors
 def uninitialize() -> None:
     """
@@ -140,7 +157,18 @@ def uninitialize() -> None:
     return _DLL.MagUninitialize()
 
 
-@_reload_on_thread_changed
+def safe_uninitialize():
+    global _current_thread
+    current_thread = threading.current_thread().ident
+    if _current_thread is None:
+        raise RuntimeError("Magnification API has not been initialized yet!")
+    if current_thread != _current_thread:
+        raise RuntimeError("Magnification API must be accessed from a single thread!")
+    uninitialize()
+    _current_thread = None
+
+
+@_require_single_thread
 @_raise_win_errors
 def set_fullscreen_color_effect(effect: ColorMatrix) -> None:
     """
@@ -152,7 +180,7 @@ def set_fullscreen_color_effect(effect: ColorMatrix) -> None:
     return _DLL.MagSetFullscreenColorEffect(_to_c_matrix(effect))
 
 
-@_reload_on_thread_changed
+@_require_single_thread
 def get_fullscreen_color_effect() -> ColorMatrix:
     """
     Retrieves the color transformation matrix associated with the full-screen magnifier.
@@ -164,9 +192,9 @@ def get_fullscreen_color_effect() -> ColorMatrix:
     return _to_py_matrix(result)
 
 
-@_reload_on_thread_changed
+@_require_single_thread
 @_raise_win_errors
-def set_fullscreen_transform(magnification_level: float, offset: tuple[int, int]):
+def set_fullscreen_transform(magnification_level: float, offset: tuple[int, int]) -> None:
     """
     Changes the magnification settings for the full-screen magnifier.
 
@@ -179,7 +207,7 @@ def set_fullscreen_transform(magnification_level: float, offset: tuple[int, int]
     return _DLL.MagSetFullscreenTransform(magnification_level, *offset)
 
 
-@_reload_on_thread_changed
+@_require_single_thread
 def get_fullscreen_transform() -> tuple[float, tuple[int, int]]:
     """
     Retrieves the magnification settings for the full-screen magnifier.
@@ -214,6 +242,9 @@ MagGetFullscreenTransform = get_fullscreen_transform
 
 # Object-Oriented Interface
 class WinMagnificationAPI:
+    def __init__(self):
+        safe_initialize()
+
     @property
     def fullscreen_color_effect(self):
         return get_fullscreen_color_effect()
@@ -231,4 +262,4 @@ class WinMagnificationAPI:
         set_fullscreen_transform(*value)
 
     def __del__(self):
-        uninitialize()
+        safe_uninitialize()
