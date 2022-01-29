@@ -129,6 +129,10 @@ def _to_c_matrix(matrix: list[list], content_type=c_float):
     ])
 
 
+def _get_alternative(value, default):
+    return default if value is None else value
+
+
 # Functions
 @_raise_win_errors
 def initialize() -> None:
@@ -194,17 +198,17 @@ def get_fullscreen_color_effect() -> ColorMatrix:
 
 @_require_single_thread
 @_raise_win_errors
-def set_fullscreen_transform(magnification_level: float, offset: tuple[int, int]) -> None:
+def set_fullscreen_transform(scale: float, offset: tuple[int, int]) -> None:
     """
     Changes the magnification settings for the full-screen magnifier.
 
-    :param magnification_level: The new magnification factor for the full-screen magnifier.
-    1.0 <= magnification_level <= 4096.0. If this value is 1.0, the screen content is not magnified and no offsets are applied.
+    :param scale: The new magnification factor for the full-screen magnifier.
+    1.0 <= scale <= 4096.0. If this value is 1.0, the screen content is not magnified and no offsets are applied.
     :param offset:
     The offset is relative to the upper-left corner of the primary monitor, in unmagnified coordinates.
     -262144 <= (x, y) <= 262144.
     """
-    return _DLL.MagSetFullscreenTransform(magnification_level, *offset)
+    return _DLL.MagSetFullscreenTransform(scale, *offset)
 
 
 @_require_single_thread
@@ -219,16 +223,30 @@ def get_fullscreen_transform() -> tuple[float, tuple[int, int]]:
         - < 1.0 is not valid.
     The offset is relative to the upper-left corner of the primary monitor, in unmagnified coordinates.
     """
-    magnification_level = pointer(c_float())
+    scale = pointer(c_float())
     offset_x = pointer(c_int())
     offset_y = pointer(c_int())
-    _raise_win_errors(_DLL.MagGetFullscreenTransform(magnification_level, offset_x, offset_y))
+    _raise_win_errors(_DLL.MagGetFullscreenTransform(scale, offset_x, offset_y))
     return (
-        magnification_level.contents.value, (
+        scale.contents.value, (
             offset_x.contents.value,
             offset_y.contents.value,
         )
     )
+
+
+# Extra functions
+reset_fullscreen_color_effect = partial(set_fullscreen_color_effect, effect=DEFAULT_COLOR_EFFECT)
+reset_fullscreen_transform = partial(set_fullscreen_transform, *DEFAULT_FULLSCREEN_TRANSFORM)
+
+
+@contextlib.contextmanager
+def require_components():
+    try:
+        safe_initialize()
+        yield
+    finally:
+        safe_uninitialize()
 
 
 # Compatability with original function names
@@ -244,6 +262,7 @@ MagGetFullscreenTransform = get_fullscreen_transform
 class WinMagnificationAPI:
     def __init__(self):
         safe_initialize()
+        self.__fullscreen_transform = FullscreenTransform()
 
     @property
     def fullscreen_color_effect(self):
@@ -255,11 +274,84 @@ class WinMagnificationAPI:
 
     @property
     def fullscreen_transform(self):
-        return get_fullscreen_transform()
+        return self.__fullscreen_transform
 
     @fullscreen_transform.setter
     def fullscreen_transform(self, value: tuple[float, tuple[int, int]]):
-        set_fullscreen_transform(*value)
+        self.__fullscreen_transform.raw = value
 
     def __del__(self):
         safe_uninitialize()
+
+
+class FullscreenTransform:
+    def __init__(self):
+        self.__offset = FullscreenTransform._Offset(self)
+
+    def _change(self,
+                scale: float = None,
+                x: int = None,
+                y: int = None):
+        _scale, (_x, _y) = self.raw
+        self.raw = (
+            _get_alternative(scale, _scale),
+            (_get_alternative(x, _x),
+             _get_alternative(y, _y))
+        )
+
+    @property
+    def scale(self) -> float:
+        scale, _ = self.raw
+        return scale
+
+    @scale.setter
+    def scale(self, value: float):
+        self._change(scale=value)
+
+    @property
+    def offset(self) -> 'FullscreenTransform._Offset':
+        return self.__offset
+
+    @offset.setter
+    def offset(self, value: tuple[int, int]):
+        self.__offset.raw = value
+
+    @property
+    def raw(self) -> tuple[float, tuple[int, int]]:
+        return get_fullscreen_transform()
+
+    @raw.setter
+    def raw(self, value: tuple[float, tuple[int, int]]):
+        set_fullscreen_transform(*value)
+
+    class _Offset:
+        def __init__(self, outer: 'FullscreenTransform'):
+            self.__outer = outer
+
+        @property
+        def x(self) -> int:
+            x, _ = self.raw
+            return x
+
+        @x.setter
+        def x(self, value: int):
+            self.__outer._change(x=value)
+
+        @property
+        def y(self) -> int:
+            _, y = self.raw
+            return y
+
+        @y.setter
+        def y(self, value: int):
+            self.__outer._change(y=value)
+
+        @property
+        def raw(self) -> tuple[int, int]:
+            _, offset = self.__outer.raw
+            return offset
+
+        @raw.setter
+        def raw(self, value: tuple[int, int]):
+            x, y = value
+            self.__outer._change(x=x, y=y)
