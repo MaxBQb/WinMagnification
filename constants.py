@@ -3,7 +3,7 @@ Constants and type hints
 
 Author: MaxBQb
 Docs: https://docs.microsoft.com/en-us/windows/win32/api/_magapi/
-Header: https://searchcode.com/codesearch/view/66549806/
+Header: https://pastebin.com/Lh82NjjM
 """
 
 
