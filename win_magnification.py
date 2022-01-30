@@ -14,7 +14,7 @@ from _wrapper import *
 
 
 @_utils.require_single_thread()
-def initialize() -> None:
+def safe_initialize() -> None:
     """
     Creates and initializes the magnifier run-time objects.
     """
@@ -25,7 +25,7 @@ def initialize() -> None:
 
 
 @_utils.require_single_thread()
-def uninitialize() -> None:
+def safe_uninitialize() -> None:
     """
     Destroys the magnifier run-time objects.
     """
@@ -35,6 +35,8 @@ def uninitialize() -> None:
     _utils.thread_holder.release_thread()
 
 
+initialize = safe_initialize
+uninitialize = safe_uninitialize
 reset_fullscreen_color_effect = partial(set_fullscreen_color_effect, effect=DEFAULT_COLOR_EFFECT)
 reset_fullscreen_transform = partial(set_fullscreen_transform, *DEFAULT_FULLSCREEN_TRANSFORM)
 
