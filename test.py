@@ -24,7 +24,7 @@ class NoControlWindowTest(unittest.TestCase):
         mag_api.fullscreen_color_effect = mag.COLOR_INVERSION_EFFECT
         self.assertEqual(mag_api.fullscreen_color_effect, mag.COLOR_INVERSION_EFFECT)
         # Note: Set delay with time.sleep to see visual difference
-        mag_api.fullscreen_color_effect = mag.NO_EFFECT
+        del mag_api.fullscreen_color_effect
         self.assertEqual(mag_api.fullscreen_color_effect, mag.NO_EFFECT)
 
     def test_set_fullscreen_color_effect_threaded(self):
@@ -36,13 +36,13 @@ class NoControlWindowTest(unittest.TestCase):
     def test_set_fullscreen_transform(self):
         mag_api = mag.WinMagnificationAPI()
         new_transform = (1.5, (0, 0))
-        mag_api.fullscreen_transform = new_transform
+        mag_api.fullscreen_transform.raw = new_transform
         self.assertEqual(
             mag_api.fullscreen_transform.raw,
             new_transform
         )
         # Note: Set delay with time.sleep to see visual difference
-        mag.reset_fullscreen_transform()
+        del mag_api.fullscreen_transform.raw
         self.assertEqual(
             mag_api.fullscreen_transform.raw,
             mag.DEFAULT_FULLSCREEN_TRANSFORM
@@ -53,7 +53,7 @@ class NoControlWindowTest(unittest.TestCase):
         max_scale = 10
         step = 1
         default_scale, (start_x, start_y) = mag.DEFAULT_FULLSCREEN_TRANSFORM
-        mag.reset_fullscreen_transform()
+        del mag_api.fullscreen_transform.raw
         for i in range(max_scale):
             mag_api.fullscreen_transform.scale += step
             mag_api.fullscreen_transform.offset.x += 2*step
@@ -68,10 +68,10 @@ class NoControlWindowTest(unittest.TestCase):
         )
 
         # Note: Set delay with time.sleep to see visual difference
-        mag_api.fullscreen_transform.offset = 150, 200
+        mag_api.fullscreen_transform.offset.raw = 150, 200
         self.assertEqual(mag_api.fullscreen_transform.offset.raw, (150, 200))
 
-        mag.reset_fullscreen_transform()
+        del mag_api.fullscreen_transform.raw
         self.assertEqual(
             mag_api.fullscreen_transform.raw,
             mag.DEFAULT_FULLSCREEN_TRANSFORM

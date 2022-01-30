@@ -272,13 +272,13 @@ class WinMagnificationAPI:
     def fullscreen_color_effect(self, value: ColorMatrix):
         set_fullscreen_color_effect(value)
 
+    @fullscreen_color_effect.deleter
+    def fullscreen_color_effect(self):
+        reset_fullscreen_color_effect()
+
     @property
     def fullscreen_transform(self):
         return self.__fullscreen_transform
-
-    @fullscreen_transform.setter
-    def fullscreen_transform(self, value: tuple[float, tuple[int, int]]):
-        self.__fullscreen_transform.raw = value
 
     def __del__(self):
         safe_uninitialize()
@@ -308,13 +308,14 @@ class FullscreenTransform:
     def scale(self, value: float):
         self._change(scale=value)
 
+    @scale.deleter
+    def scale(self):
+        scale, _ = DEFAULT_FULLSCREEN_TRANSFORM
+        self._change(scale=scale)
+
     @property
     def offset(self) -> 'FullscreenTransform._Offset':
         return self.__offset
-
-    @offset.setter
-    def offset(self, value: tuple[int, int]):
-        self.__offset.raw = value
 
     @property
     def raw(self) -> tuple[float, tuple[int, int]]:
@@ -323,6 +324,10 @@ class FullscreenTransform:
     @raw.setter
     def raw(self, value: tuple[float, tuple[int, int]]):
         set_fullscreen_transform(*value)
+
+    @raw.deleter
+    def raw(self):
+        reset_fullscreen_transform()
 
     class _Offset:
         def __init__(self, outer: 'FullscreenTransform'):
@@ -337,6 +342,11 @@ class FullscreenTransform:
         def x(self, value: int):
             self.__outer._change(x=value)
 
+        @x.deleter
+        def x(self):
+            _, (x, _) = DEFAULT_FULLSCREEN_TRANSFORM
+            self.__outer._change(x=x)
+
         @property
         def y(self) -> int:
             _, y = self.raw
@@ -346,6 +356,11 @@ class FullscreenTransform:
         def y(self, value: int):
             self.__outer._change(y=value)
 
+        @y.deleter
+        def y(self):
+            _, (_, y) = DEFAULT_FULLSCREEN_TRANSFORM
+            self.__outer._change(y=y)
+
         @property
         def raw(self) -> tuple[int, int]:
             _, offset = self.__outer.raw
@@ -354,4 +369,9 @@ class FullscreenTransform:
         @raw.setter
         def raw(self, value: tuple[int, int]):
             x, y = value
+            self.__outer._change(x=x, y=y)
+
+        @raw.deleter
+        def raw(self):
+            _, (x, y) = DEFAULT_FULLSCREEN_TRANSFORM
             self.__outer._change(x=x, y=y)
