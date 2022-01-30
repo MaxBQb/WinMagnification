@@ -27,7 +27,7 @@ def initialize() -> None:
 
 
 @_utils.raise_win_errors
-def uninitialize() -> None:
+def finalize() -> None:
     """
     Destroys the magnifier run-time objects.
     """
@@ -102,7 +102,7 @@ def get_fullscreen_transform() -> tuple[float, tuple[int, int]]:
 MagInitialize = initialize
 _DLL.MagInitialize.restype = BOOL
 
-MagUninitialize = uninitialize
+MagUninitialize = finalize
 _DLL.MagUninitialize.restype = BOOL
 
 MagGetFullscreenColorEffect = get_fullscreen_color_effect

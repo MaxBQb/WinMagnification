@@ -7,15 +7,15 @@ import win_magnification as mag
 class InitUninitTest(unittest.TestCase):
     def test_init_uninit(self):
         mag.initialize()
-        mag.uninitialize()
+        mag.finalize()
 
     def test_initialize_twice(self):
         mag.initialize()
         self.assertRaises(RuntimeError, mag.initialize)
 
     def test_uninitialize_twice(self):
-        mag.uninitialize()
-        self.assertRaises(RuntimeError, mag.uninitialize)
+        mag.finalize()
+        self.assertRaises(RuntimeError, mag.finalize)
 
 
 class NoControlWindowTest(unittest.TestCase):

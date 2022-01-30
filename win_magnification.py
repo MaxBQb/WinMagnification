@@ -25,18 +25,18 @@ def safe_initialize() -> None:
 
 
 @_utils.require_single_thread()
-def safe_uninitialize() -> None:
+def safe_finalize() -> None:
     """
     Destroys the magnifier run-time objects.
     """
     if not _utils.thread_holder.has_content:
         raise RuntimeError("Magnification API has not been initialized yet!")
-    _wrapper.uninitialize()
+    _wrapper.finalize()
     _utils.thread_holder.release_thread()
 
 
 initialize = safe_initialize
-uninitialize = safe_uninitialize
+finalize = safe_finalize
 reset_fullscreen_color_effect = partial(set_fullscreen_color_effect, effect=DEFAULT_COLOR_EFFECT)
 reset_fullscreen_transform = partial(set_fullscreen_transform, *DEFAULT_FULLSCREEN_TRANSFORM)
 
@@ -47,7 +47,7 @@ def require_components():
         initialize()
         yield
     finally:
-        uninitialize()
+        finalize()
 
 
 # Object-Oriented Interface
@@ -73,7 +73,7 @@ class WinMagnificationAPI:
         return self.__fullscreen_transform
 
     def __del__(self):
-        uninitialize()
+        finalize()
 
 
 class _FullscreenTransform:
