@@ -5,6 +5,7 @@ Header: https://pastebin.com/Lh82NjjM
 """
 from ctypes import *
 from ctypes.wintypes import *
+from typing import Optional
 
 import _utils
 from constants import *
@@ -15,6 +16,9 @@ _DLL = WinDLL('magnification.dll')
 # C Types
 _MAGCOLOREFFECT = (c_float * 5) * 5
 _PMAGCOLOREFFECT = POINTER(_MAGCOLOREFFECT)
+
+_MAGTRANSFORM = (c_float * 3) * 3
+_PMAGTRANSFORM = POINTER(_MAGTRANSFORM)
 
 
 # Functions
@@ -98,6 +102,46 @@ def get_fullscreen_transform() -> tuple[float, tuple[int, int]]:
     )
 
 
+@_utils.raise_win_errors
+def set_color_effect(hwnd: int, effect: Optional[ColorMatrix]) -> None:
+    """
+    Sets the color transformation matrix for a magnifier control.
+
+    :param hwnd: The magnification window.
+    :param effect: The color transformation matrix, or None to remove the current color effect, if any.
+    """
+    return _DLL.MagSetColorEffect(
+        hwnd,
+        _utils.to_c_matrix(effect)
+        if effect is not None
+        else None
+    )
+
+
+@_utils.raise_win_errors
+def set_window_transform(hwnd: int, matrix: TransformationMatrix) -> None:
+    """
+    Sets the transformation matrix for a magnifier control.
+
+    :param hwnd: The handle of the magnification window.
+    :param matrix: A 3x3 matrix of the magnification transformation
+    :return: True if successful.
+    """
+    return _DLL.MagSetWindowTransform(hwnd, _utils.to_c_matrix(matrix))
+
+
+@_utils.raise_win_errors
+def set_window_source(hwnd: int, rectangle: Rectangle) -> None:
+    """
+    Sets the source rectangle for the magnification window.
+
+    :param hwnd: The handle of the magnification window.
+    :param rectangle: Magnification rectangle (left, top, right, bottom)
+    :return: True if successful.
+    """
+    return _DLL.MagSetWindowSource(hwnd, RECT(*rectangle))
+
+
 # C-Function original names and signatures
 MagInitialize = initialize
 _DLL.MagInitialize.restype = BOOL
@@ -120,3 +164,15 @@ _DLL.MagSetFullscreenTransform.argtypes = (c_float, c_int, c_int)
 MagGetFullscreenTransform = get_fullscreen_transform
 _DLL.MagGetFullscreenTransform.restype = BOOL
 _DLL.MagGetFullscreenTransform.argtypes = (POINTER(c_float), POINTER(c_int), POINTER(c_int))
+
+MagSetColorEffect = set_color_effect
+_DLL.MagSetColorEffect.restype = BOOL
+_DLL.MagSetColorEffect.argtypes = (HWND, _PMAGCOLOREFFECT,)
+
+MagSetWindowTransform = set_window_transform
+_DLL.MagSetWindowTransform.restype = BOOL
+_DLL.MagSetWindowTransform.argtypes = (HWND, _PMAGTRANSFORM,)
+
+MagSetWindowSource = set_window_source
+_DLL.MagSetWindowSource.restype = BOOL
+_DLL.MagSetWindowSource.argtypes = (HWND, RECT)

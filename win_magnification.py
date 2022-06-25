@@ -11,6 +11,7 @@ from functools import partial
 import _utils
 import _wrapper
 from _wrapper import *
+import typing
 
 
 @_utils.require_single_thread()
@@ -18,8 +19,7 @@ def safe_initialize() -> None:
     """
     Creates and initializes the magnifier run-time objects.
     """
-    if _utils.thread_holder.has_content:
-        raise RuntimeError("Magnification API already initialized!")
+    _utils.thread_holder.lock.acquire()
     _wrapper.initialize()
     _utils.thread_holder.hold_current_thread()
 
@@ -35,8 +35,20 @@ def safe_finalize() -> None:
     _utils.thread_holder.release_thread()
 
 
+def set_window_transform_simple(hwnd: int, scale: typing.Union[float, tuple[float, float]]):
+    scale_x, scale_y = scale if isinstance(scale, tuple) else (scale, scale)
+    matrix = [
+        [scale_x, 0, 0],
+        [0, scale_y, 0],
+        [0, 0, 1],
+    ]
+    set_window_transform_advanced(hwnd, matrix)
+
+
 initialize = safe_initialize
 finalize = safe_finalize
+set_window_transform_advanced = set_window_transform
+set_window_transform = set_window_transform_simple
 reset_fullscreen_color_effect = partial(set_fullscreen_color_effect, effect=DEFAULT_COLOR_EFFECT)
 reset_fullscreen_transform = partial(set_fullscreen_transform, *DEFAULT_FULLSCREEN_TRANSFORM)
 

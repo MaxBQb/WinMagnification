@@ -9,7 +9,7 @@ import contextlib
 import threading
 from ctypes import *
 from functools import wraps
-from typing import Callable, ParamSpec
+from typing import Callable, ParamSpec, Optional
 
 P = ParamSpec("P")
 
@@ -55,6 +55,7 @@ def get_alternative(value, default):
 class ThreadHolder:
     def __init__(self):
         self.__thread_identifier = None
+        self.lock = threading.Lock()
     
     @property    
     def has_content(self):
@@ -79,6 +80,7 @@ class ThreadHolder:
     def release_thread(self):
         self.require_thread_match()
         self.__thread_identifier = None
+        self.lock.release()
 
 
 thread_holder = ThreadHolder()

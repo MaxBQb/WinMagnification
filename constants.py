@@ -8,7 +8,7 @@ Header: https://pastebin.com/Lh82NjjM
 
 
 # C Constants (feel free to use)
-WC_MAGNIFIER = "Magnifier"
+WC_MAGNIFIER = "Magnifier"  # Class registered only after initialize() call
 MS_SHOWMAGNIFIEDCURSOR = 1
 MS_CLIPAROUNDCURSOR = 2
 MS_INVERTCOLORS = 4
@@ -42,15 +42,27 @@ More info: https://docs.microsoft.com/en-us/windows/win32/gdiplus/-gdiplus-using
 """
 
 
+TransformationMatrix = list[
+    list[float, float, float],
+    list[float, float, float],
+    list[float, float, float],
+]
+
+
+Rectangle = tuple[int, int, int, int]
+"""
+Tuple of ints: (left, top, right, bottom)
+"""
+
+
 # Color matrix
-IDENTITY_MATRIX: ColorMatrix = [
+NO_EFFECT: ColorMatrix = [
      [1, 0, 0, 0, 0],
      [0, 1, 0, 0, 0],
      [0, 0, 1, 0, 0],
      [0, 0, 0, 1, 0],
      [0, 0, 0, 0, 1],
 ]
-NO_EFFECT = IDENTITY_MATRIX
 
 COLOR_INVERSION_EFFECT: ColorMatrix = [
      [-1, 0, 0, 0, 0],
@@ -60,7 +72,14 @@ COLOR_INVERSION_EFFECT: ColorMatrix = [
      [1, 1, 1, 0, 1],
 ]
 
+# Transformation matrix
+NO_TRANSFORM: ColorMatrix = [
+     [1, 0, 0],
+     [0, 1, 0],
+     [0, 0, 1],
+]
 
 # Defaults
 DEFAULT_COLOR_EFFECT = NO_EFFECT
+DEFAULT_TRANSFORM = NO_TRANSFORM
 DEFAULT_FULLSCREEN_TRANSFORM = (1.0, (0, 0))
