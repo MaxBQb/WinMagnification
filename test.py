@@ -5,17 +5,21 @@ import win_magnification as mag
 import windows_utils
 import time
 
-ALLOW_SLEEP = False  # Change to see visual changes on test running
+# Change to see visual changes on test running
+ALLOW_SLEEP = False  # TODO: Don't forget reset to False
 
 
+# noinspection PyUnusedLocal
 def delay_for_visualize(secs: float) -> None:
     pass
 
 
 if ALLOW_SLEEP:
+    # noinspection PyRedeclaration
     delay_for_visualize = time.sleep
 
 
+# noinspection PyMethodMayBeStatic
 class InitFinalizeTest(unittest.TestCase):
     def test_init_finalize(self):
         mag.initialize()
@@ -33,11 +37,14 @@ class InitFinalizeTest(unittest.TestCase):
 class NoControlWindowTest(unittest.TestCase):
     def test_set_fullscreen_color_effect(self):
         mag_api = mag.WinMagnificationAPI()
-        mag_api.fullscreen_color_effect = mag.COLOR_INVERSION_EFFECT
-        self.assertEqual(mag_api.fullscreen_color_effect, mag.COLOR_INVERSION_EFFECT)
+        mag_api.fullscreen.color_effect = mag.COLOR_INVERSION_EFFECT
+        self.assertEqual(mag_api.fullscreen.color_effect, mag.COLOR_INVERSION_EFFECT)
         delay_for_visualize(1)
-        del mag_api.fullscreen_color_effect
-        self.assertEqual(mag_api.fullscreen_color_effect, mag.NO_EFFECT)
+        mag_api.fullscreen.reset_color_effect()
+        self.assertEqual(
+            mag_api.fullscreen.color_effect,
+            mag_api.fullscreen.default_color_effect
+        )
 
     def test_set_fullscreen_color_effect_threaded(self):
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
@@ -48,16 +55,16 @@ class NoControlWindowTest(unittest.TestCase):
     def test_set_fullscreen_transform(self):
         mag_api = mag.WinMagnificationAPI()
         new_transform = (1.5, (0, 0))
-        mag_api.fullscreen_transform.raw = new_transform
+        mag_api.fullscreen.transform = mag.FullscreenTransform.fromRaw(new_transform)
         self.assertEqual(
-            mag_api.fullscreen_transform.raw,
+            mag_api.fullscreen.transform.raw,
             new_transform
         )
         delay_for_visualize(1)
-        del mag_api.fullscreen_transform.raw
+        mag_api.fullscreen.reset_transform()
         self.assertEqual(
-            mag_api.fullscreen_transform.raw,
-            mag.DEFAULT_FULLSCREEN_TRANSFORM
+            mag_api.fullscreen.transform,
+            mag_api.fullscreen.default_transform,
         )
 
     def test_set_fullscreen_transform_details(self):
@@ -65,14 +72,15 @@ class NoControlWindowTest(unittest.TestCase):
         max_scale = 10
         step = 1
         default_scale, (start_x, start_y) = mag.DEFAULT_FULLSCREEN_TRANSFORM
-        del mag_api.fullscreen_transform.raw
+        mag_api.fullscreen.reset_transform()
         for i in range(max_scale):
-            mag_api.fullscreen_transform.scale += step
-            mag_api.fullscreen_transform.offset.x += 2 * step
-            mag_api.fullscreen_transform.offset.y += 3 * step
+            with mag_api.fullscreen.transform as transform:
+                transform.scale += step
+                transform.offset.x += 2 * step
+                transform.offset.y += 3 * step
 
         self.assertEqual(
-            mag_api.fullscreen_transform.raw,
+            mag_api.fullscreen.transform.raw,
             (max_scale * step + default_scale, (
                 2 * step * max_scale + start_x,
                 3 * step * max_scale + start_y
@@ -80,12 +88,20 @@ class NoControlWindowTest(unittest.TestCase):
         )
 
         delay_for_visualize(1)
-        mag_api.fullscreen_transform.offset.raw = 150, 200
-        self.assertEqual(mag_api.fullscreen_transform.offset.raw, (150, 200))
+        with mag_api.fullscreen.transform as transform:
+            transform.offset = mag.Offset(150, 200)
+        self.assertEqual(mag_api.fullscreen.transform.offset.raw, (150, 200))
 
-        del mag_api.fullscreen_transform.raw
+        delay_for_visualize(1)
+        offset = 15
+        with mag_api.fullscreen.transform as transform:
+            transform.offset = mag.Offset.same(offset)
+        self.assertEqual(mag_api.fullscreen.transform.offset.x, offset)
+        self.assertEqual(mag_api.fullscreen.transform.offset.y, offset)
+
+        mag_api.fullscreen.reset_transform()
         self.assertEqual(
-            mag_api.fullscreen_transform.raw,
+            mag_api.fullscreen.transform.raw,
             mag.DEFAULT_FULLSCREEN_TRANSFORM
         )
 
@@ -117,6 +133,7 @@ class MagnificationControlWindowTest(unittest.TestCase):
         mag.set_color_effect(self.window.magnifier_hwnd, mag.COLOR_INVERSION_EFFECT)
         delay_for_visualize(1)
         self.window.fullscreen_mode = False
+        delay_for_visualize(1)
         self.assertEqual(self.window.fullscreen_mode, False)
 
 

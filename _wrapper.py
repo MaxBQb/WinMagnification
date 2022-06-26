@@ -78,7 +78,7 @@ def set_fullscreen_transform(scale: float, offset: tuple[int, int]) -> None:
 
 
 @_utils.require_single_thread()
-def get_fullscreen_transform() -> tuple[float, tuple[int, int]]:
+def get_fullscreen_transform() -> FullscreenTransformRaw:
     """
     Retrieves the magnification settings for the full-screen magnifier.
 

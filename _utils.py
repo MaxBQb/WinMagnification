@@ -9,7 +9,7 @@ import contextlib
 import threading
 from ctypes import *
 from functools import wraps
-from typing import Callable, ParamSpec, Optional
+from typing import Callable, ParamSpec
 
 P = ParamSpec("P")
 
@@ -46,10 +46,6 @@ def to_c_matrix(matrix: list[list], content_type=c_float):
     return (content_type * len(matrix) * len(matrix))(*[
         (content_type * len(row))(*row) for row in matrix
     ])
-
-
-def get_alternative(value, default):
-    return default if value is None else value
 
 
 class ThreadHolder:

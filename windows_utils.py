@@ -99,13 +99,15 @@ class AbstractWindow(metaclass=ABCMeta):
         self.hwnd: Optional[int] = None
         self.position = (0, 0)
         self.size = (400, 400)
+        # noinspection PyTypeChecker
         self.rectangle: Rectangle = (*self.position, *self.size)
         self._fullscreen_rectangle: Rectangle = (0, 0, 200, 200)
         self._fullscreen_mode = False
 
     @property
-    def rectangle(self):
-        return *self.position, *self.size
+    def rectangle(self) -> Rectangle:
+        # noinspection PyTypeChecker
+        return *self.position, *self.size  # type: ignore
 
     @rectangle.setter
     def rectangle(self, value):
@@ -250,11 +252,12 @@ class MagnifierWindow(BasicWindow):
         self._on_move()
 
     def _create_magnifier_window(self):
+        # noinspection SpellCheckingInspection
         self.magnifier_hwnd = win32gui.CreateWindow(
             mag.WC_MAGNIFIER,
             "Custom Magnifier Window",
             win32con.WS_CHILD |
-             mag.MS_SHOWMAGNIFIEDCURSOR |
+            # mag.MS_SHOWMAGNIFIEDCURSOR |
             win32con.WS_VISIBLE,
             *win32gui.GetClientRect(self.hwnd),
             self.hwnd, 0,

@@ -6,6 +6,7 @@ Docs: https://docs.microsoft.com/en-us/windows/win32/api/_magapi/
 Header: https://pastebin.com/Lh82NjjM
 """
 import contextlib
+from dataclasses import dataclass
 from functools import partial
 
 import _utils
@@ -48,7 +49,7 @@ def set_window_transform_simple(hwnd: int, scale: typing.Union[float, tuple[floa
 initialize = safe_initialize
 finalize = safe_finalize
 set_window_transform_advanced = set_window_transform
-set_window_transform = set_window_transform_simple
+set_window_transform = set_window_transform_simple  # type: ignore
 reset_fullscreen_color_effect = partial(set_fullscreen_color_effect, effect=DEFAULT_COLOR_EFFECT)
 reset_fullscreen_transform = partial(set_fullscreen_transform, *DEFAULT_FULLSCREEN_TRANSFORM)
 
@@ -66,116 +67,121 @@ def require_components():
 class WinMagnificationAPI:
     def __init__(self):
         initialize()
-        self.__fullscreen_transform = _FullscreenTransform()
+        self.__disposed = False
+        self.__fullscreen = FullscreenController()
 
     @property
-    def fullscreen_color_effect(self):
-        return get_fullscreen_color_effect()
+    def fullscreen(self):
+        return self.__fullscreen
 
-    @fullscreen_color_effect.setter
-    def fullscreen_color_effect(self, value: ColorMatrix):
-        set_fullscreen_color_effect(value)
-
-    @fullscreen_color_effect.deleter
-    def fullscreen_color_effect(self):
-        reset_fullscreen_color_effect()
-
-    @property
-    def fullscreen_transform(self):
-        return self.__fullscreen_transform
-
-    def __del__(self):
+    def dispose(self):
+        """
+        You may use this method for cleanup,
+        but python's GC can do that for you
+        """
+        if self.__disposed:
+            return
+        self.__disposed = True
         finalize()
 
+    def __del__(self):
+        self.dispose()
 
-class _FullscreenTransform:
-    def __init__(self):
-        self.__offset = _FullscreenTransform._Offset(self)
 
-    def _change(self,
-                scale: float = None,
-                x: int = None,
-                y: int = None):
-        _scale, (_x, _y) = self.raw
-        self.raw = (
-            _utils.get_alternative(scale, _scale),
-            (_utils.get_alternative(x, _x),
-             _utils.get_alternative(y, _y))
+@dataclass
+class Offset:
+    x: int
+    y: int
+
+    @classmethod
+    def same(cls, value: int):
+        return cls(value, value)
+
+    @property
+    def raw(self):
+        return self.x, self.y
+
+
+@dataclass
+class FullscreenTransform:
+    """
+    Fullscreen transformation representation
+    Note: to change properties use `with` block:
+
+    with api.fullscreen.transform as transform:
+        transform.offset.x += 1
+    """
+
+    scale: float
+    offset: Offset
+
+    @property
+    def default_scale(self):
+        return DEFAULT_FULLSCREEN_TRANSFORM[0]
+
+    @property
+    def default_offset(self):
+        return Offset(DEFAULT_FULLSCREEN_TRANSFORM[1][0], DEFAULT_FULLSCREEN_TRANSFORM[1][1])
+
+    def reset_scale(self):
+        self.scale = self.default_scale
+
+    def reset_offset(self):
+        self.offset = self.default_offset
+
+    @property
+    def raw(self) -> FullscreenTransformRaw:
+        return self.scale, self.offset.raw
+
+    @classmethod
+    def fromRaw(cls, value: FullscreenTransformRaw):
+        return cls(value[0], Offset(*value[1]))
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is None:
+            set_fullscreen_transform(*self.raw)
+
+
+class FullscreenController:
+    @property
+    def transform(self):
+        """
+        Note: to change properties use `with` block:
+
+        with api.fullscreen.transform as transform:
+            transform.offset.x += 1
+        """
+        return FullscreenTransform.fromRaw(
+            get_fullscreen_transform()
         )
 
-    @property
-    def scale(self) -> float:
-        scale, _ = self.raw
-        return scale
-
-    @scale.setter
-    def scale(self, value: float):
-        self._change(scale=value)
-
-    @scale.deleter
-    def scale(self):
-        scale, _ = DEFAULT_FULLSCREEN_TRANSFORM
-        self._change(scale=scale)
+    @transform.setter
+    def transform(self, value: FullscreenTransform):
+        set_fullscreen_transform(*value.raw)
 
     @property
-    def offset(self) -> '_FullscreenTransform._Offset':
-        return self.__offset
+    def default_transform(self):
+        return FullscreenTransform.fromRaw(DEFAULT_FULLSCREEN_TRANSFORM)
 
-    @property
-    def raw(self) -> tuple[float, tuple[int, int]]:
-        return get_fullscreen_transform()
-
-    @raw.setter
-    def raw(self, value: tuple[float, tuple[int, int]]):
-        set_fullscreen_transform(*value)
-
-    @raw.deleter
-    def raw(self):
+    @staticmethod
+    def reset_transform():
         reset_fullscreen_transform()
 
-    class _Offset:
-        def __init__(self, outer: '_FullscreenTransform'):
-            self.__outer = outer
+    @property
+    def color_effect(self):
+        return get_fullscreen_color_effect()
 
-        @property
-        def x(self) -> int:
-            x, _ = self.raw
-            return x
+    @color_effect.setter
+    def color_effect(self, value: ColorMatrix):
+        set_fullscreen_color_effect(value)
 
-        @x.setter
-        def x(self, value: int):
-            self.__outer._change(x=value)
+    @property
+    def default_color_effect(self):
+        return DEFAULT_COLOR_EFFECT
 
-        @x.deleter
-        def x(self):
-            _, (x, _) = DEFAULT_FULLSCREEN_TRANSFORM
-            self.__outer._change(x=x)
-
-        @property
-        def y(self) -> int:
-            _, y = self.raw
-            return y
-
-        @y.setter
-        def y(self, value: int):
-            self.__outer._change(y=value)
-
-        @y.deleter
-        def y(self):
-            _, (_, y) = DEFAULT_FULLSCREEN_TRANSFORM
-            self.__outer._change(y=y)
-
-        @property
-        def raw(self) -> tuple[int, int]:
-            _, offset = self.__outer.raw
-            return offset
-
-        @raw.setter
-        def raw(self, value: tuple[int, int]):
-            x, y = value
-            self.__outer._change(x=x, y=y)
-
-        @raw.deleter
-        def raw(self):
-            _, (x, y) = DEFAULT_FULLSCREEN_TRANSFORM
-            self.__outer._change(x=x, y=y)
+    @staticmethod
+    def reset_color_effect():
+        reset_fullscreen_color_effect()

@@ -49,6 +49,7 @@ TransformationMatrix = list[
 ]
 
 
+FullscreenTransformRaw = tuple[float, tuple[int, int]]
 Rectangle = tuple[int, int, int, int]
 """
 Tuple of ints: (left, top, right, bottom)
@@ -82,4 +83,4 @@ NO_TRANSFORM: ColorMatrix = [
 # Defaults
 DEFAULT_COLOR_EFFECT = NO_EFFECT
 DEFAULT_TRANSFORM = NO_TRANSFORM
-DEFAULT_FULLSCREEN_TRANSFORM = (1.0, (0, 0))
+DEFAULT_FULLSCREEN_TRANSFORM: FullscreenTransformRaw = (1.0, (0, 0))
