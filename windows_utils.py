@@ -87,7 +87,7 @@ class AbstractWindow(metaclass=ABCMeta):
     window_class: int = 0
     window_class_name = "Py_MyAbstractWindowClass"
     windows: weakref.WeakValueDictionary[int, 'AbstractWindow'] = weakref.WeakValueDictionary()
-    events: dict[int, WinEventHandler] = dict()
+    events: dict[int, Callable[[int, int, int, int], None]] = dict()
     # noinspection SpellCheckingInspection
     hinst = win32api.GetModuleHandle()
 
@@ -179,7 +179,7 @@ class AbstractWindow(metaclass=ABCMeta):
 def win_event(message: int):
     def _wrapper(fun: WinEventHandler):
         # noinspection PyUnusedLocal
-        def on_event(hwnd, message_, wparam, lparam):
+        def on_event(hwnd: int, message_: int, wparam: int, lparam: int):
             self = AbstractWindow.windows.get(hwnd, None)
             if self:
                 return fun(self)
