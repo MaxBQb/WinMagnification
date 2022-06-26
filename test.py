@@ -120,6 +120,13 @@ class NoControlWindowTest(unittest.TestCase):
         mag_api.fullscreen.transformFrom(last.raw)
         self.assertEqual(mag_api.fullscreen.transform.raw, last.raw)
 
+    def test_gradation(self):
+        mag_api = mag.WinMagnificationAPI()
+        for i in range(100+1):
+            mag_api.fullscreen.color_effect = mag.get_color_matrix_inversion(i/100.0)
+            delay_for_visualize(0.01)
+        self.assertEqual(mag_api.fullscreen.color_effect, mag.COLOR_INVERSION_EFFECT)
+
 
 class MagnificationControlWindowTest(unittest.TestCase):
     def setUp(self):
@@ -176,7 +183,6 @@ class MagnificationControlWindowTest(unittest.TestCase):
         self.assertEqual(self.window.controller.scale.raw, last.raw)
         self.window.controller.reset_scale()
         self.assertEqual(self.window.controller.scale, self.window.controller.default_scale)
-
 
 
 if __name__ == '__main__':

@@ -37,14 +37,12 @@ def require_single_thread():
     yield
 
 
-def to_py_matrix(c_matrix: Array[Array]):
-    return list(map(list, c_matrix))
+def to_py_array(c_matrix: Array, content_type=float):
+    return tuple(map(content_type, c_matrix))
 
 
-def to_c_matrix(matrix: list[list], content_type=c_float):
-    return (content_type * len(matrix) * len(matrix))(*[
-        (content_type * len(row))(*row) for row in matrix
-    ])
+def to_c_array(matrix: tuple, content_type=c_float):
+    return (content_type * len(matrix))(*matrix)
 
 
 def to_py_rectangle(rectangle: RECT) -> Rectangle:

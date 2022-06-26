@@ -37,12 +37,7 @@ def safe_finalize() -> None:
 
 def set_transform_simple(hwnd: int, scale: typing.Union[float, tuple[float, float]]):
     scale_x, scale_y = scale if isinstance(scale, tuple) else (scale, scale)
-    matrix = [
-        [scale_x, 0, 0],
-        [0, scale_y, 0],
-        [0, 0, 1],
-    ]
-    set_transform_advanced(hwnd, matrix)
+    set_transform_advanced(hwnd, get_transform_matrix(scale_x, scale_y))
 
 
 initialize = safe_initialize
@@ -146,19 +141,17 @@ class FullscreenTransform:
 class WindowTransform:
     x: float
     y: float
+    __x_pos = pos_for_matrix(TransformationMatrixSize, 0, 0)
+    __y_pos = pos_for_matrix(TransformationMatrixSize, 1, 1)
 
     def __post_init__(self):
-        self._raw = [
-            [self.x, 0, 0],
-            [0, self.y, 0],
-            [0, 0, 1],
-        ]
+        self._raw = list(get_transform_matrix(self.x, self.y))
 
     @property
     def raw(self):
-        self._raw[0][0] = self.x
-        self._raw[1][1] = self.y
-        return self._raw
+        self._raw[self.__x_pos] = self.x
+        self._raw[self.__y_pos] = self.y
+        return tuple(self._raw)
 
     @property
     def pair(self):
@@ -166,8 +159,8 @@ class WindowTransform:
 
     @classmethod
     def fromRaw(cls, value: TransformationMatrix):
-        result = cls(value[0][0], value[1][1])
-        cls._raw = value
+        result = cls(value[cls.__x_pos], value[cls.__y_pos])
+        cls._raw = list(value)
         return result
 
     @classmethod

@@ -17,12 +17,12 @@ MW_FILTERMODE_EXCLUDE = 1
 
 
 # Type hints
-ColorMatrix = list[
-    list[float, float, float, float, float],
-    list[float, float, float, float, float],
-    list[float, float, float, float, float],
-    list[float, float, float, float, float],
-    list[float, float, float, float, float],
+ColorMatrix = tuple[
+    float, float, float, float, float,
+    float, float, float, float, float,
+    float, float, float, float, float,
+    float, float, float, float, float,
+    float, float, float, float, float,
 ]
 """
 Red
@@ -40,13 +40,14 @@ r+=x   g+=x   b+=x   a+=x   1
 
 More info: https://docs.microsoft.com/en-us/windows/win32/gdiplus/-gdiplus-using-a-color-matrix-to-transform-a-single-color-use
 """
+ColorMatrixSize: int = 5**2
 
-
-TransformationMatrix = list[
-    list[float, float, float],
-    list[float, float, float],
-    list[float, float, float],
+TransformationMatrix = tuple[
+    float, float, float,
+    float, float, float,
+    float, float, float,
 ]
+TransformationMatrixSize: int = 3**2
 
 
 FullscreenTransformRaw = tuple[float, tuple[int, int]]
@@ -54,33 +55,3 @@ Rectangle = tuple[int, int, int, int]
 """
 Tuple of ints: (left, top, right, bottom)
 """
-
-
-# Color matrix
-NO_EFFECT: ColorMatrix = [
-     [1, 0, 0, 0, 0],
-     [0, 1, 0, 0, 0],
-     [0, 0, 1, 0, 0],
-     [0, 0, 0, 1, 0],
-     [0, 0, 0, 0, 1],
-]
-
-COLOR_INVERSION_EFFECT: ColorMatrix = [
-     [-1, 0, 0, 0, 0],
-     [0, -1, 0, 0, 0],
-     [0, 0, -1, 0, 0],
-     [0, 0, 0, 1, 0],
-     [1, 1, 1, 0, 1],
-]
-
-# Transformation matrix
-NO_TRANSFORM: TransformationMatrix = [
-     [1, 0, 0],
-     [0, 1, 0],
-     [0, 0, 1],
-]
-
-# Defaults
-DEFAULT_COLOR_EFFECT = NO_EFFECT
-DEFAULT_TRANSFORM = NO_TRANSFORM
-DEFAULT_FULLSCREEN_TRANSFORM: FullscreenTransformRaw = (1.0, (0, 0))

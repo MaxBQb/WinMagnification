@@ -6,18 +6,18 @@ Header: https://pastebin.com/Lh82NjjM
 from ctypes import *
 from ctypes.wintypes import *
 from typing import Optional
-
+from defaults import *
 import _utils
-from constants import *
+
 
 _DLL = WinDLL('magnification.dll')
 
 
 # C Types
-_MAGCOLOREFFECT = (c_float * 5) * 5
+_MAGCOLOREFFECT = (c_float * ColorMatrixSize)
 _PMAGCOLOREFFECT = POINTER(_MAGCOLOREFFECT)
 
-_MAGTRANSFORM = (c_float * 3) * 3
+_MAGTRANSFORM = (c_float * TransformationMatrixSize)
 _PMAGTRANSFORM = POINTER(_MAGTRANSFORM)
 
 
@@ -47,7 +47,7 @@ def set_fullscreen_color_effect(effect: ColorMatrix) -> None:
     :param effect: The new color transformation matrix.
     This parameter must not be None.
     """
-    return _DLL.MagSetFullscreenColorEffect(_utils.to_c_matrix(effect))
+    return _DLL.MagSetFullscreenColorEffect(_utils.to_c_array(effect))
 
 
 @_utils.require_single_thread()
@@ -57,15 +57,9 @@ def get_fullscreen_color_effect() -> ColorMatrix:
 
     :return: The color transformation matrix, or the identity matrix if no color effect has been set.
     """
-    result = _utils.to_c_matrix([
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-    ])
+    result = _utils.to_c_array([0]*ColorMatrixSize)
     _utils.handle_win_last_error(_DLL.MagGetFullscreenColorEffect(result))
-    return _utils.to_py_matrix(result)
+    return _utils.to_py_array(result)
 
 
 @_utils.require_single_thread()
@@ -118,7 +112,7 @@ def set_color_effect(hwnd: int, effect: Optional[ColorMatrix]) -> None:
     """
     return _DLL.MagSetColorEffect(
         hwnd,
-        _utils.to_c_matrix(effect)
+        _utils.to_c_array(effect)
         if effect is not None
         else None
     )
@@ -131,15 +125,9 @@ def get_color_effect(hwnd: int) -> ColorMatrix:
     :param hwnd: The magnification window.
     :return: The color transformation matrix, or None if no color effect has been set.
     """
-    result = _utils.to_c_matrix([
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-    ])
+    result = _utils.to_c_array([0]*ColorMatrixSize)
     _utils.handle_win_last_error(_DLL.MagGetColorEffect(hwnd, result))
-    return _utils.to_py_matrix(result)
+    return _utils.to_py_array(result)
 
 
 @_utils.raise_win_errors
@@ -151,7 +139,7 @@ def set_transform(hwnd: int, matrix: TransformationMatrix) -> None:
     :param matrix: A 3x3 matrix of the magnification transformation
     :return: True if successful.
     """
-    return _DLL.MagSetWindowTransform(hwnd, _utils.to_c_matrix(matrix))
+    return _DLL.MagSetWindowTransform(hwnd, _utils.to_c_array(matrix))
 
 
 def get_transform(hwnd: int) -> TransformationMatrix:
@@ -161,13 +149,9 @@ def get_transform(hwnd: int) -> TransformationMatrix:
     :param hwnd: The handle of the magnification window.
     :return: A 3x3 matrix of the magnification transformation.
     """
-    result = _utils.to_c_matrix([
-        [0, 0, 0],
-        [0, 0, 0],
-        [0, 0, 0],
-    ])
+    result = _utils.to_c_array([0]*TransformationMatrixSize)
     _utils.handle_win_last_error(_DLL.MagGetWindowTransform(hwnd, result))
-    return _utils.to_py_matrix(result)
+    return _utils.to_py_array(result)
 
 
 @_utils.raise_win_errors
