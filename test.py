@@ -55,7 +55,7 @@ class NoControlWindowTest(unittest.TestCase):
     def test_set_fullscreen_transform(self):
         mag_api = mag.WinMagnificationAPI()
         new_transform = (1.5, (0, 0))
-        mag_api.fullscreen.transform = mag.FullscreenTransform.fromRaw(new_transform)
+        mag_api.fullscreen.transformFrom(new_transform)
         self.assertEqual(
             mag_api.fullscreen.transform.raw,
             new_transform
@@ -99,11 +99,26 @@ class NoControlWindowTest(unittest.TestCase):
         self.assertEqual(mag_api.fullscreen.transform.offset.x, offset)
         self.assertEqual(mag_api.fullscreen.transform.offset.y, offset)
 
+        with mag_api.fullscreen.transform as transform:
+            transform.reset_offset()
+            transform.reset_scale()
+            transform.scale = 2
+        self.assertEqual(mag_api.fullscreen.transform.offset.raw, mag.DEFAULT_FULLSCREEN_TRANSFORM[1])
+        self.assertEqual(mag_api.fullscreen.transform.scale, 2)
+
         mag_api.fullscreen.reset_transform()
         self.assertEqual(
             mag_api.fullscreen.transform.raw,
             mag.DEFAULT_FULLSCREEN_TRANSFORM
         )
+
+    def test_idempotent(self):
+        mag_api = mag.WinMagnificationAPI()
+        last = mag_api.fullscreen.transform
+        mag_api.fullscreen.transformFrom(last)
+        self.assertEqual(mag_api.fullscreen.transform, last)
+        mag_api.fullscreen.transformFrom(last.raw)
+        self.assertEqual(mag_api.fullscreen.transform.raw, last.raw)
 
 
 class MagnificationControlWindowTest(unittest.TestCase):
@@ -119,8 +134,7 @@ class MagnificationControlWindowTest(unittest.TestCase):
 
     def test_fullscreen_switch(self):
         state = cycle((True, False))
-        mag.set_window_transform(self.window.magnifier_hwnd, 1)
-        mag.set_color_effect(self.window.magnifier_hwnd, mag.COLOR_INVERSION_EFFECT)
+        self.window.controller.color_effect = mag.COLOR_INVERSION_EFFECT
         for i in range(4):
             new_state = next(state)
             self.window.fullscreen_mode = new_state
@@ -129,12 +143,40 @@ class MagnificationControlWindowTest(unittest.TestCase):
 
     def test_effects(self):
         self.window.fullscreen_mode = True
-        mag.set_window_transform(self.window.magnifier_hwnd, 1)
-        mag.set_color_effect(self.window.magnifier_hwnd, mag.COLOR_INVERSION_EFFECT)
+        scale = 1.5
+        self.window.controller.scaleFrom(scale)
+        self.window.controller.color_effect = mag.COLOR_INVERSION_EFFECT
+        self.assertEqual(self.window.controller.source, self.window.current_rectangle)
+        self.assertEqual(self.window.controller.scale.pair, (scale, scale))
         delay_for_visualize(1)
+        self.window.controller.scaleFrom((scale, scale*2))
+        self.assertEqual(self.window.controller.scale.x, scale)
+        self.assertEqual(self.window.controller.scale.y, 2*scale)
         self.window.fullscreen_mode = False
         delay_for_visualize(1)
+        self.window.controller.reset_scale()
+        self.assertEqual(self.window.controller.scale.raw, mag.DEFAULT_TRANSFORM)
+        self.assertEqual(self.window.controller.color_effect, mag.COLOR_INVERSION_EFFECT)
         self.assertEqual(self.window.fullscreen_mode, False)
+        delay_for_visualize(1)
+        mag.set_transform_simple(self.window.magnifier_hwnd, scale)
+        self.assertEqual(self.window.controller.scale.pair, (scale, scale))
+        delay_for_visualize(1)
+        mag.set_transform_simple(self.window.magnifier_hwnd, (scale, scale*2))
+        self.assertEqual(self.window.controller.scale.pair, (scale, 2*scale))
+        self.assertEqual(self.window.controller.color_effect, mag.COLOR_INVERSION_EFFECT)
+        self.window.controller.reset_color_effect()
+        self.assertEqual(self.window.controller.color_effect, self.window.controller.default_color_effect)
+
+    def test_idempotent(self):
+        last = self.window.controller.scale
+        self.window.controller.scaleFrom(last)
+        self.assertEqual(self.window.controller.scale, last)
+        self.window.controller.scaleFrom(last.raw)
+        self.assertEqual(self.window.controller.scale.raw, last.raw)
+        self.window.controller.reset_scale()
+        self.assertEqual(self.window.controller.scale, self.window.controller.default_scale)
+
 
 
 if __name__ == '__main__':

@@ -8,8 +8,11 @@ Header: https://pastebin.com/Lh82NjjM
 import contextlib
 import threading
 from ctypes import *
+from ctypes.wintypes import RECT
 from functools import wraps
 from typing import Callable, ParamSpec
+
+from constants import Rectangle
 
 P = ParamSpec("P")
 
@@ -34,10 +37,6 @@ def require_single_thread():
     yield
 
 
-def get_empty_matrix(size: int):
-    return [[0] * size for _ in range(size)]
-
-
 def to_py_matrix(c_matrix: Array[Array]):
     return list(map(list, c_matrix))
 
@@ -46,6 +45,16 @@ def to_c_matrix(matrix: list[list], content_type=c_float):
     return (content_type * len(matrix) * len(matrix))(*[
         (content_type * len(row))(*row) for row in matrix
     ])
+
+
+def to_py_rectangle(rectangle: RECT) -> Rectangle:
+    # noinspection PyTypeChecker
+    return (
+        rectangle.left,
+        rectangle.top,
+        rectangle.right,
+        rectangle.bottom
+    )
 
 
 class ThreadHolder:

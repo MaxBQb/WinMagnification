@@ -74,7 +74,7 @@ COLOR_INVERSION_EFFECT: ColorMatrix = [
 ]
 
 # Transformation matrix
-NO_TRANSFORM: ColorMatrix = [
+NO_TRANSFORM: TransformationMatrix = [
      [1, 0, 0],
      [0, 1, 0],
      [0, 0, 1],

@@ -57,7 +57,13 @@ def get_fullscreen_color_effect() -> ColorMatrix:
 
     :return: The color transformation matrix, or the identity matrix if no color effect has been set.
     """
-    result = _utils.to_c_matrix(_utils.get_empty_matrix(5))
+    result = _utils.to_c_matrix([
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+    ])
     _utils.handle_win_last_error(_DLL.MagGetFullscreenColorEffect(result))
     return _utils.to_py_matrix(result)
 
@@ -118,8 +124,26 @@ def set_color_effect(hwnd: int, effect: Optional[ColorMatrix]) -> None:
     )
 
 
+def get_color_effect(hwnd: int) -> ColorMatrix:
+    """
+    Gets the color transformation matrix for a magnifier control.
+
+    :param hwnd: The magnification window.
+    :return: The color transformation matrix, or None if no color effect has been set.
+    """
+    result = _utils.to_c_matrix([
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+    ])
+    _utils.handle_win_last_error(_DLL.MagGetColorEffect(hwnd, result))
+    return _utils.to_py_matrix(result)
+
+
 @_utils.raise_win_errors
-def set_window_transform(hwnd: int, matrix: TransformationMatrix) -> None:
+def set_transform(hwnd: int, matrix: TransformationMatrix) -> None:
     """
     Sets the transformation matrix for a magnifier control.
 
@@ -130,8 +154,24 @@ def set_window_transform(hwnd: int, matrix: TransformationMatrix) -> None:
     return _DLL.MagSetWindowTransform(hwnd, _utils.to_c_matrix(matrix))
 
 
+def get_transform(hwnd: int) -> TransformationMatrix:
+    """
+    Use to get the magnification transformation matrix on the window provided by the window handle
+
+    :param hwnd: The handle of the magnification window.
+    :return: A 3x3 matrix of the magnification transformation.
+    """
+    result = _utils.to_c_matrix([
+        [0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 0],
+    ])
+    _utils.handle_win_last_error(_DLL.MagGetWindowTransform(hwnd, result))
+    return _utils.to_py_matrix(result)
+
+
 @_utils.raise_win_errors
-def set_window_source(hwnd: int, rectangle: Rectangle) -> None:
+def set_source(hwnd: int, rectangle: Rectangle) -> None:
     """
     Sets the source rectangle for the magnification window.
 
@@ -140,6 +180,18 @@ def set_window_source(hwnd: int, rectangle: Rectangle) -> None:
     :return: True if successful.
     """
     return _DLL.MagSetWindowSource(hwnd, RECT(*rectangle))
+
+
+def get_source(hwnd: int) -> Rectangle:
+    """
+    Gets the rectangle of the area that is being magnified.
+
+    :param hwnd: The window handle.
+    :return: Magnification rectangle (left, top, right, bottom)
+    """
+    result = pointer(RECT(0, 0, 0, 0))
+    _utils.handle_win_last_error(_DLL.MagGetWindowSource(hwnd, result))
+    return _utils.to_py_rectangle(result.contents)
 
 
 # C-Function original names and signatures
@@ -169,10 +221,22 @@ MagSetColorEffect = set_color_effect
 _DLL.MagSetColorEffect.restype = BOOL
 _DLL.MagSetColorEffect.argtypes = (HWND, _PMAGCOLOREFFECT,)
 
-MagSetWindowTransform = set_window_transform
+MagGetColorEffect = get_color_effect
+_DLL.MagGetColorEffect.restype = BOOL
+_DLL.MagGetColorEffect.argtypes = (HWND, _PMAGCOLOREFFECT,)
+
+MagSetWindowTransform = set_transform
 _DLL.MagSetWindowTransform.restype = BOOL
 _DLL.MagSetWindowTransform.argtypes = (HWND, _PMAGTRANSFORM,)
 
-MagSetWindowSource = set_window_source
+MagGetWindowTransform = get_transform
+_DLL.MagGetWindowTransform.restype = BOOL
+_DLL.MagGetWindowTransform.argtypes = (HWND, _PMAGTRANSFORM,)
+
+MagSetWindowSource = set_source
 _DLL.MagSetWindowSource.restype = BOOL
 _DLL.MagSetWindowSource.argtypes = (HWND, RECT)
+
+MagGetWindowSource = get_source
+_DLL.MagGetWindowSource.restype = BOOL
+_DLL.MagGetWindowSource.argtypes = (HWND, POINTER(RECT))

@@ -164,11 +164,6 @@ class AbstractWindow(metaclass=ABCMeta):
         self.hwnd = None
         win32api.PostQuitMessage(0)
 
-    def _run_event(self, event: int):
-        win32gui.PostMessage(
-            self.hwnd, event, 0, 0
-        )
-
     @property
     def current_rectangle(self):
         if self._fullscreen_mode:
@@ -243,11 +238,17 @@ class MagnifierWindow(BasicWindow):
 
     def __init__(self):
         super().__init__()
-        self.magnifier_hwnd = None
+        self.magnifier_hwnd: Optional[int] = None
+        self.__magnifier: Optional[mag.WinMagnificationAPI] = None
+
+    def create_window(self):
+        self.__magnifier = mag.WinMagnificationAPI()
+        super().create_window()
 
     def _create_window(self):
         self._create_host_window()
         self._create_magnifier_window()
+        self.__magnifier.window.hwnd = self.magnifier_hwnd
         win32gui.ShowWindow(self.hwnd, win32con.SW_SHOW)
         self._on_move()
 
@@ -285,6 +286,14 @@ class MagnifierWindow(BasicWindow):
         super()._close()
         self.magnifier_hwnd = None
 
+    def after_close(self):
+        """Call this method after PumpMessages"""
+        self.__magnifier.dispose()
+
+    @property
+    def controller(self):
+        return self.__magnifier.window
+
     @win_event(win32con.WM_SIZE)
     def _on_resize(self):
         if not self.fullscreen_mode:
@@ -305,7 +314,7 @@ class MagnifierWindow(BasicWindow):
         if not self.is_alive:
             return
 
-        mag.set_window_source(self.magnifier_hwnd, self.current_rectangle)
+        self.controller.source = self.current_rectangle
 
         if self.hwnd is None:
             return
@@ -320,11 +329,12 @@ class MagnifierWindow(BasicWindow):
 
 
 def run_magnifier_window(window: MagnifierWindow) -> threading.Thread:
-    @mag.require_components()
+    # @mag.require_components()
     def inner():
         win32gui.InitCommonControls()
         window.create_window()
         win32gui.PumpMessages()
+        window.after_close()
 
     thread = threading.Thread(target=inner)
     thread.start()
