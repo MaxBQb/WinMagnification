@@ -288,3 +288,12 @@ class CustomWindowController:
     @source.setter
     def source(self, value: Rectangle):
         set_source(self.hwnd, value)
+
+    @property
+    def filters(self):
+        _, filters = get_filters(self.hwnd)
+        return filters
+
+    @filters.setter
+    def filters(self, value: tuple):
+        set_filters(self.hwnd, *value)

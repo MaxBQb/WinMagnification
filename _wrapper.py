@@ -9,15 +9,17 @@ from typing import Optional
 from defaults import *
 import _utils
 
-
 _DLL = WinDLL('magnification.dll')
 
-
 # C Types
+# noinspection SpellCheckingInspection
 _MAGCOLOREFFECT = (c_float * ColorMatrixSize)
+# noinspection SpellCheckingInspection
 _PMAGCOLOREFFECT = POINTER(_MAGCOLOREFFECT)
 
+# noinspection SpellCheckingInspection
 _MAGTRANSFORM = (c_float * TransformationMatrixSize)
+# noinspection SpellCheckingInspection
 _PMAGTRANSFORM = POINTER(_MAGTRANSFORM)
 
 
@@ -57,7 +59,7 @@ def get_fullscreen_color_effect() -> ColorMatrix:
 
     :return: The color transformation matrix, or the identity matrix if no color effect has been set.
     """
-    result = _utils.to_c_array([0]*ColorMatrixSize)
+    result = _utils.to_c_array((0,) * ColorMatrixSize)
     _utils.handle_win_last_error(_DLL.MagGetFullscreenColorEffect(result))
     return _utils.to_py_array(result)
 
@@ -125,7 +127,7 @@ def get_color_effect(hwnd: int) -> ColorMatrix:
     :param hwnd: The magnification window.
     :return: The color transformation matrix, or None if no color effect has been set.
     """
-    result = _utils.to_c_array([0]*ColorMatrixSize)
+    result = _utils.to_c_array((0,) * ColorMatrixSize)
     _utils.handle_win_last_error(_DLL.MagGetColorEffect(hwnd, result))
     return _utils.to_py_array(result)
 
@@ -137,7 +139,6 @@ def set_transform(hwnd: int, matrix: TransformationMatrix) -> None:
 
     :param hwnd: The handle of the magnification window.
     :param matrix: A 3x3 matrix of the magnification transformation
-    :return: True if successful.
     """
     return _DLL.MagSetWindowTransform(hwnd, _utils.to_c_array(matrix))
 
@@ -149,7 +150,7 @@ def get_transform(hwnd: int) -> TransformationMatrix:
     :param hwnd: The handle of the magnification window.
     :return: A 3x3 matrix of the magnification transformation.
     """
-    result = _utils.to_c_array([0]*TransformationMatrixSize)
+    result = _utils.to_c_array((0,) * TransformationMatrixSize)
     _utils.handle_win_last_error(_DLL.MagGetWindowTransform(hwnd, result))
     return _utils.to_py_array(result)
 
@@ -161,7 +162,6 @@ def set_source(hwnd: int, rectangle: Rectangle) -> None:
 
     :param hwnd: The handle of the magnification window.
     :param rectangle: Magnification rectangle (left, top, right, bottom)
-    :return: True if successful.
     """
     return _DLL.MagSetWindowSource(hwnd, RECT(*rectangle))
 
@@ -178,10 +178,54 @@ def get_source(hwnd: int) -> Rectangle:
     return _utils.to_py_rectangle(result.contents)
 
 
+@_utils.raise_win_errors
+def set_filters(root_hwnd: int, *hwnds: int, exclude=True) -> None:
+    """
+    Sets the list of windows to be magnified or the list of windows to be excluded from magnification.
+
+    :param root_hwnd: The handle of the magnification window.
+    :param exclude: The magnification filter mode. It can be one of the following values:
+        False = INCLUDE (This value is not supported on Windows 7 or newer).
+        True = EXCLUDE (Magnifier acts as windows from list aren't exist at all)
+    :param hwnds: List of window handles.
+    """
+    return _DLL.MagSetWindowFilterList(
+        root_hwnd,
+        MW_FILTERMODE_EXCLUDE if exclude else MW_FILTERMODE_INCLUDE,
+        len(hwnds),
+        _utils.to_c_array(hwnds, HWND)
+    )
+
+
+def get_filters(hwnd: int) -> tuple[bool, tuple[int]]:
+    """
+    Retrieves the list of windows that are magnified or excluded from magnification.
+
+    :param hwnd: The magnification window.
+    :return: The filter mode and the list of window handles.
+    """
+    exclude = pointer(DWORD())
+    count = _DLL.MagGetWindowFilterList(hwnd, exclude, 0, None)
+    if count == -1:
+        raise RuntimeError(f"Invalid hwnd: {hwnd}")
+    elif count == 0:
+        return (
+            exclude.contents.value == MW_FILTERMODE_EXCLUDE,
+            tuple()
+        )
+    result = (HWND * count)(*((0,) * count))
+    _DLL.MagGetWindowFilterList(hwnd, exclude, count, result)
+    return (
+        exclude.contents.value == MW_FILTERMODE_EXCLUDE,
+        _utils.to_py_array(result, int)
+    )
+
+
 # C-Function original names and signatures
 MagInitialize = initialize
 _DLL.MagInitialize.restype = BOOL
 
+# noinspection SpellCheckingInspection
 MagUninitialize = finalize
 _DLL.MagUninitialize.restype = BOOL
 
@@ -224,3 +268,11 @@ _DLL.MagSetWindowSource.argtypes = (HWND, RECT)
 MagGetWindowSource = get_source
 _DLL.MagGetWindowSource.restype = BOOL
 _DLL.MagGetWindowSource.argtypes = (HWND, POINTER(RECT))
+
+MagSetWindowFilterList = set_filters
+_DLL.MagSetWindowFilterList.restype = BOOL
+_DLL.MagSetWindowFilterList.argtypes = (HWND, DWORD, c_int, POINTER(HWND))
+
+MagGetWindowFilterList = get_filters
+_DLL.MagGetWindowFilterList.restype = BOOL
+_DLL.MagGetWindowFilterList.argtypes = (HWND, POINTER(DWORD), c_int, POINTER(HWND))

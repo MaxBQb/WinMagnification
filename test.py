@@ -9,14 +9,9 @@ import time
 ALLOW_SLEEP = False  # TODO: Don't forget reset to False
 
 
-# noinspection PyUnusedLocal
-def delay_for_visualize(secs: float) -> None:
-    pass
-
-
-if ALLOW_SLEEP:
-    # noinspection PyRedeclaration
-    delay_for_visualize = time.sleep
+def delay_for_visualize(secs: float, apply=ALLOW_SLEEP):
+    if apply:
+        time.sleep(secs)
 
 
 # noinspection PyMethodMayBeStatic
@@ -183,6 +178,17 @@ class MagnificationControlWindowTest(unittest.TestCase):
         self.assertEqual(self.window.controller.scale.raw, last.raw)
         self.window.controller.reset_scale()
         self.assertEqual(self.window.controller.scale, self.window.controller.default_scale)
+
+    def test_exclusion_filters(self):
+        self.window.controller.color_effect = mag.COLOR_INVERSION_EFFECT
+        result_list = (1902036, 65552, 1)
+        self.window.controller.filters = result_list
+        self.assertEqual(self.window.controller.filters, result_list)
+        delay_for_visualize(1)
+        self.window.controller.filters = ()
+        self.assertEqual(self.window.controller.filters, tuple())
+        delay_for_visualize(1)
+        self.assertRaises(RuntimeError, mag.get_filters, 0)
 
 
 if __name__ == '__main__':
