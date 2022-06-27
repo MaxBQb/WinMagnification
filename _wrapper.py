@@ -221,6 +221,66 @@ def get_filters(hwnd: int) -> tuple[bool, tuple[int]]:
     )
 
 
+@_utils.raise_win_errors
+def set_input_transform(is_enabled: bool, source: Rectangle, destination: Rectangle) -> None:
+    """
+    Sets the current active input transformation for pen and touch input,
+    represented as a source rectangle and a destination rectangle.
+    Requires the calling process to have UIAccess privileges.
+
+    :param is_enabled: True to enable input transformation, or False to disable it.
+    :param source: The new source rectangle, in unmagnified screen coordinates,
+    that defines the area of the screen to magnify.
+    This parameter is ignored if is_enabled is False.
+    :param destination: The new destination rectangle, in unmagnified screen coordinates,
+    that defines the area of the screen where the magnified screen content is displayed.
+    Pen and touch input in this rectangle is mapped to the source rectangle.
+    This parameter is ignored if is_enabled is False.
+    """
+    return _DLL.MagSetInputTransform(
+        is_enabled,
+        pointer(RECT(*source)),
+        pointer(RECT(*destination))
+    )
+
+
+def get_input_transform() -> InputTransformRaw:
+    """
+    Retrieves the current input transformation for pen and touch input,
+    represented as a source rectangle and a destination rectangle.
+
+    :return: Tuple of is_enabled, source and destination:
+    is_enabled: True if input translation is enabled.
+    source: The source rectangle, in unmagnified screen coordinates,
+    that defines the area of the screen that is magnified.
+    destination: The destination rectangle, in screen coordinates,
+    that defines the area of the screen where the magnified screen content is displayed.
+    Pen and touch input in this rectangle is mapped to the source rectangle.
+    """
+    is_enabled = pointer(BOOL())
+    source = pointer(RECT())
+    destination = pointer(RECT())
+
+    _utils.handle_win_last_error(_DLL.MagGetInputTransform(is_enabled, source, destination))
+    return (
+        bool(is_enabled.contents.value),
+        _utils.to_py_rectangle(source.contents),
+        _utils.to_py_rectangle(destination.contents),
+    )
+
+
+@_utils.raise_win_errors
+def set_cursor_visibility(show_cursor: bool):
+    """
+    Shows or hides the system cursor.
+    (Personal Note: Invisibility applies until cursor moves)
+
+    :param show_cursor: True to show the system cursor,
+    or False to hide it.
+    """
+    return _DLL.MagShowSystemCursor(show_cursor)
+
+
 # C-Function original names and signatures
 MagInitialize = initialize
 _DLL.MagInitialize.restype = BOOL
@@ -276,3 +336,15 @@ _DLL.MagSetWindowFilterList.argtypes = (HWND, DWORD, c_int, POINTER(HWND))
 MagGetWindowFilterList = get_filters
 _DLL.MagGetWindowFilterList.restype = BOOL
 _DLL.MagGetWindowFilterList.argtypes = (HWND, POINTER(DWORD), c_int, POINTER(HWND))
+
+MagGetInputTransform = get_input_transform
+_DLL.MagGetInputTransform.restype = BOOL
+_DLL.MagGetInputTransform.argtypes = (POINTER(BOOL), POINTER(RECT), POINTER(RECT))
+
+MagSetInputTransform = set_input_transform
+_DLL.MagSetInputTransform.restype = BOOL
+_DLL.MagSetInputTransform.argtypes = (BOOL, POINTER(RECT), POINTER(RECT))
+
+MagShowSystemCursor = set_cursor_visibility
+_DLL.MagShowSystemCursor.restype = BOOL
+_DLL.MagShowSystemCursor.argtypes = (BOOL,)

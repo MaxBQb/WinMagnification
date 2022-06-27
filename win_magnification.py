@@ -161,6 +161,32 @@ class FullscreenTransform:
 
 
 @dataclass
+class InputTransform:
+    """
+    Input transformation representation
+    Note: to change properties use `with` block:
+
+    with api.fullscreen.input_transform as input_transform:
+        input_transform.offset.x += 1
+    """
+
+    enabled: bool
+    source: Rectangle
+    destination: Rectangle
+
+    @property
+    def raw(self) -> InputTransformRaw:
+        return self.enabled, self.source, self.destination
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is None:
+            set_input_transform(*self.raw)
+
+
+@dataclass
 class WindowTransform:
     x: float
     y: float
@@ -251,6 +277,22 @@ class FullscreenController:
     @staticmethod
     def reset_color_effect():
         reset_fullscreen_color_effect()
+
+    @property
+    def input_transform(self):
+        return InputTransform(*get_input_transform())
+
+    @input_transform.setter
+    def input_transform(self, value: InputTransform):
+        set_input_transform(*value.raw)
+
+    @staticmethod
+    def input_transform_from(value: InputTransformRaw):
+        set_input_transform(*value)
+
+    @staticmethod
+    def set_cursor_visibility(show_cursor: bool):
+        set_cursor_visibility(show_cursor)
 
 
 class CustomWindowController:

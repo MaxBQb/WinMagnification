@@ -1,5 +1,6 @@
 import concurrent.futures
 import unittest
+from contextlib import suppress
 from itertools import cycle
 import win_magnification as mag
 import windows_utils
@@ -121,6 +122,30 @@ class NoControlWindowTest(unittest.TestCase):
             mag_api.fullscreen.color_effect = mag.get_color_matrix_inversion(i/100.0)
             delay_for_visualize(0.01)
         self.assertEqual(mag_api.fullscreen.color_effect, mag.COLOR_INVERSION_EFFECT)
+
+    def test_cursor(self):
+        mag_api = mag.WinMagnificationAPI()
+        mag_api.fullscreen.set_cursor_visibility(False)
+        delay_for_visualize(1)
+        mag_api.fullscreen.set_cursor_visibility(True)
+
+    def test_input_transform(self):
+        mag_api = mag.WinMagnificationAPI()
+        rectangles = (0, 0, 2, 2), (0, 0, 3, 3)
+        self.assertEqual(mag_api.fullscreen.input_transform.raw, (False, *((0,)*4,)*2))
+        with suppress(OSError):
+            mag_api.fullscreen.input_transform_from((True, *rectangles))
+            self.assertTrue(mag_api.fullscreen.input_transform.enabled)
+            self.assertEqual(mag_api.fullscreen.input_transform.source, rectangles[0])
+            self.assertEqual(mag_api.fullscreen.input_transform.destination, rectangles[1])
+            mag_api.fullscreen.input_transform = mag_api.fullscreen.input_transform
+            self.assertEqual(mag_api.fullscreen.input_transform.raw,  (True, *rectangles))
+        with suppress(OSError):
+            with mag_api.fullscreen.input_transform as input_transform:
+                input_transform.destination = (0, 0, 0, 0)
+                input_transform.source = (0, 0, 0, 0)
+                input_transform.enabled = False
+            self.assertEqual(mag_api.fullscreen.input_transform.raw, (False, *((0,) * 4,) * 2))
 
 
 class MagnificationControlWindowTest(unittest.TestCase):

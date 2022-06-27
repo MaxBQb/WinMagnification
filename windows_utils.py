@@ -14,6 +14,10 @@ import win32gui  # type: ignore
 import win_magnification as mag
 from constants import Rectangle
 
+# make_partial_screen & make_fullscreen
+# Inspired by:
+# https://github.com/microsoft/Windows-classic-samples/blob/main/Samples/Magnification/cpp/Windowed/MagnifierSample.cpp
+
 
 def make_partial_screen(hwnd, rectangle: Rectangle):
     win32gui.SetWindowLong(
