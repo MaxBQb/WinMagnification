@@ -47,7 +47,7 @@ def to_c_array(matrix: tuple, content_type=c_float):
 
 def to_py_rectangle(rectangle: RECT) -> Rectangle:
     # noinspection PyTypeChecker
-    return (
+    return (  # type: ignore
         rectangle.left,
         rectangle.top,
         rectangle.right,

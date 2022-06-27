@@ -14,8 +14,8 @@ from _wrapper import *
 import typing
 
 
-@_utils.require_single_thread()
-def safe_initialize() -> None:
+@_utils.require_single_thread()  # type: ignore
+def initialize() -> None:
     """
     Creates and initializes the magnifier run-time objects.
     """
@@ -24,8 +24,8 @@ def safe_initialize() -> None:
     _utils.thread_holder.hold_current_thread()
 
 
-@_utils.require_single_thread()
-def safe_finalize() -> None:
+@_utils.require_single_thread()  # type: ignore
+def finalize() -> None:
     """
     Destroys the magnifier run-time objects.
     """
@@ -35,15 +35,27 @@ def safe_finalize() -> None:
     _utils.thread_holder.release_thread()
 
 
-def set_transform_simple(hwnd: int, scale: typing.Union[float, tuple[float, float]]):
+def set_transform_advanced(hwnd: int, matrix: TransformationMatrix) -> None:
+    """
+    Sets the transformation matrix for a magnifier control.
+
+    :param hwnd: The handle of the magnification window.
+    :param matrix: A 3x3 matrix of the magnification transformation
+    """
+    _wrapper.set_transform(hwnd, matrix)
+
+
+def set_transform(hwnd: int, scale: typing.Union[float, tuple[float, float]]):  # type: ignore
+    """
+    Sets the transformation matrix for a magnifier control.
+
+    :param hwnd: The handle of the magnification window.
+    :param scale: Magnification factor, or it's separate x, y components
+    """
     scale_x, scale_y = scale if isinstance(scale, tuple) else (scale, scale)
     set_transform_advanced(hwnd, get_transform_matrix(scale_x, scale_y))
 
 
-initialize = safe_initialize
-finalize = safe_finalize
-set_transform_advanced = set_transform
-set_transform = set_transform_simple  # type: ignore
 reset_fullscreen_color_effect = partial(set_fullscreen_color_effect, effect=DEFAULT_COLOR_EFFECT)
 reset_fullscreen_transform = partial(set_fullscreen_transform, *DEFAULT_FULLSCREEN_TRANSFORM)
 reset_transform = partial(set_transform_advanced, matrix=DEFAULT_TRANSFORM)
@@ -93,6 +105,12 @@ class Offset:
     def raw(self):
         return self.x, self.y
 
+    @classmethod
+    def convert(cls, value: typing.Union[int, tuple[int, int]]):
+        if isinstance(value, int):
+            return cls.same(value)
+        return cls(*value)
+
 
 @dataclass
 class FullscreenTransform:
@@ -106,6 +124,11 @@ class FullscreenTransform:
 
     scale: float
     offset: Offset
+
+    def offset_from(self, value: typing.Union[int, tuple[int, int], Offset]):
+        if not isinstance(value, Offset):
+            value = Offset.convert(value)
+        self.offset = value
 
     @property
     def default_scale(self):
@@ -126,7 +149,7 @@ class FullscreenTransform:
         return self.scale, self.offset.raw
 
     @classmethod
-    def fromRaw(cls, value: FullscreenTransformRaw):
+    def from_raw(cls, value: FullscreenTransformRaw):
         return cls(value[0], Offset(*value[1]))
 
     def __enter__(self):
@@ -148,17 +171,18 @@ class WindowTransform:
         self._raw = list(get_transform_matrix(self.x, self.y))
 
     @property
-    def raw(self):
+    def raw(self) -> TransformationMatrix:
         self._raw[self.__x_pos] = self.x
         self._raw[self.__y_pos] = self.y
-        return tuple(self._raw)
+        # noinspection PyTypeChecker
+        return tuple(self._raw)  # type: ignore
 
     @property
     def pair(self):
         return self.x, self.y
 
     @classmethod
-    def fromRaw(cls, value: TransformationMatrix):
+    def from_raw(cls, value: TransformationMatrix):
         result = cls(value[cls.__x_pos], value[cls.__y_pos])
         cls._raw = list(value)
         return result
@@ -169,17 +193,15 @@ class WindowTransform:
 
     @classmethod
     def convert(cls, value: typing.Union[
-        int, float, tuple[
-            typing.Union[int, float],
-            typing.Union[int, float]
-        ], TransformationMatrix
+        float, tuple[float, float],
+        TransformationMatrix
     ]):
-        if isinstance(value, (int, float)):
-            value = value, value
+        if isinstance(value, float):
+            return cls.same(value)
         if isinstance(value, tuple) and len(value) == 2:
-            return cls(float(value[0]), float(value[1]))
+            return cls(*value)
         # noinspection PyTypeChecker
-        return cls.fromRaw(value)  # type: ignore
+        return cls.from_raw(value)  # type: ignore
 
 
 class FullscreenController:
@@ -191,7 +213,7 @@ class FullscreenController:
         with api.fullscreen.transform as transform:
             transform.offset.x += 1
         """
-        return FullscreenTransform.fromRaw(
+        return FullscreenTransform.from_raw(
             get_fullscreen_transform()
         )
 
@@ -199,16 +221,16 @@ class FullscreenController:
     def transform(self, value: FullscreenTransform):
         set_fullscreen_transform(*value.raw)
 
-    def transformFrom(self, value: typing.Union[
+    def transform_from(self, value: typing.Union[
         FullscreenTransform, FullscreenTransformRaw
     ]):
         if not isinstance(value, FullscreenTransform):
-            value = FullscreenTransform.fromRaw(value)  # type: ignore
+            value = FullscreenTransform.from_raw(value)  # type: ignore
         self.transform = value
 
     @property
     def default_transform(self):
-        return FullscreenTransform.fromRaw(DEFAULT_FULLSCREEN_TRANSFORM)
+        return FullscreenTransform.from_raw(DEFAULT_FULLSCREEN_TRANSFORM)
 
     @staticmethod
     def reset_transform():
@@ -241,7 +263,7 @@ class CustomWindowController:
         Note: properties changes don't reflect on actual window scale,
         use scale setter to apply changes
         """
-        return WindowTransform.fromRaw(
+        return WindowTransform.from_raw(
             get_transform(self.hwnd)
         )
 
@@ -249,11 +271,9 @@ class CustomWindowController:
     def scale(self, value: WindowTransform):
         set_transform_advanced(self.hwnd, value.raw)
 
-    def scaleFrom(self, value: typing.Union[
-        int, float, tuple[
-            typing.Union[int, float],
-            typing.Union[int, float]
-        ], TransformationMatrix, WindowTransform
+    def scale_from(self, value: typing.Union[
+        float, tuple[float, float],
+        TransformationMatrix, WindowTransform
     ]):
         if not isinstance(value, WindowTransform):
             value = WindowTransform.convert(value)
@@ -261,7 +281,7 @@ class CustomWindowController:
 
     @property
     def default_scale(self):
-        return WindowTransform.fromRaw(DEFAULT_TRANSFORM)
+        return WindowTransform.from_raw(DEFAULT_TRANSFORM)
 
     def reset_scale(self):
         reset_transform(self.hwnd)

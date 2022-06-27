@@ -50,7 +50,7 @@ class NoControlWindowTest(unittest.TestCase):
     def test_set_fullscreen_transform(self):
         mag_api = mag.WinMagnificationAPI()
         new_transform = (1.5, (0, 0))
-        mag_api.fullscreen.transformFrom(new_transform)
+        mag_api.fullscreen.transform_from(new_transform)
         self.assertEqual(
             mag_api.fullscreen.transform.raw,
             new_transform
@@ -84,13 +84,13 @@ class NoControlWindowTest(unittest.TestCase):
 
         delay_for_visualize(1)
         with mag_api.fullscreen.transform as transform:
-            transform.offset = mag.Offset(150, 200)
+            transform.offset_from((150, 200))
         self.assertEqual(mag_api.fullscreen.transform.offset.raw, (150, 200))
 
         delay_for_visualize(1)
         offset = 15
         with mag_api.fullscreen.transform as transform:
-            transform.offset = mag.Offset.same(offset)
+            transform.offset_from(offset)
         self.assertEqual(mag_api.fullscreen.transform.offset.x, offset)
         self.assertEqual(mag_api.fullscreen.transform.offset.y, offset)
 
@@ -110,9 +110,9 @@ class NoControlWindowTest(unittest.TestCase):
     def test_idempotent(self):
         mag_api = mag.WinMagnificationAPI()
         last = mag_api.fullscreen.transform
-        mag_api.fullscreen.transformFrom(last)
+        mag_api.fullscreen.transform_from(last)
         self.assertEqual(mag_api.fullscreen.transform, last)
-        mag_api.fullscreen.transformFrom(last.raw)
+        mag_api.fullscreen.transform_from(last.raw)
         self.assertEqual(mag_api.fullscreen.transform.raw, last.raw)
 
     def test_gradation(self):
@@ -146,12 +146,12 @@ class MagnificationControlWindowTest(unittest.TestCase):
     def test_effects(self):
         self.window.fullscreen_mode = True
         scale = 1.5
-        self.window.controller.scaleFrom(scale)
+        self.window.controller.scale_from(scale)
         self.window.controller.color_effect = mag.COLOR_INVERSION_EFFECT
         self.assertEqual(self.window.controller.source, self.window.current_rectangle)
         self.assertEqual(self.window.controller.scale.pair, (scale, scale))
         delay_for_visualize(1)
-        self.window.controller.scaleFrom((scale, scale*2))
+        self.window.controller.scale_from((scale, scale * 2))
         self.assertEqual(self.window.controller.scale.x, scale)
         self.assertEqual(self.window.controller.scale.y, 2*scale)
         self.window.fullscreen_mode = False
@@ -161,10 +161,10 @@ class MagnificationControlWindowTest(unittest.TestCase):
         self.assertEqual(self.window.controller.color_effect, mag.COLOR_INVERSION_EFFECT)
         self.assertEqual(self.window.fullscreen_mode, False)
         delay_for_visualize(1)
-        mag.set_transform_simple(self.window.magnifier_hwnd, scale)
+        mag.set_transform(self.window.magnifier_hwnd, scale)
         self.assertEqual(self.window.controller.scale.pair, (scale, scale))
         delay_for_visualize(1)
-        mag.set_transform_simple(self.window.magnifier_hwnd, (scale, scale*2))
+        mag.set_transform(self.window.magnifier_hwnd, (scale, scale * 2))
         self.assertEqual(self.window.controller.scale.pair, (scale, 2*scale))
         self.assertEqual(self.window.controller.color_effect, mag.COLOR_INVERSION_EFFECT)
         self.window.controller.reset_color_effect()
@@ -172,9 +172,9 @@ class MagnificationControlWindowTest(unittest.TestCase):
 
     def test_idempotent(self):
         last = self.window.controller.scale
-        self.window.controller.scaleFrom(last)
+        self.window.controller.scale_from(last)
         self.assertEqual(self.window.controller.scale, last)
-        self.window.controller.scaleFrom(last.raw)
+        self.window.controller.scale_from(last.raw)
         self.assertEqual(self.window.controller.scale.raw, last.raw)
         self.window.controller.reset_scale()
         self.assertEqual(self.window.controller.scale, self.window.controller.default_scale)
