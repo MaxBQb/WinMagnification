@@ -51,7 +51,7 @@ class NoControlWindowTest(unittest.TestCase):
     def test_set_fullscreen_transform(self):
         mag_api = mag.WinMagnificationAPI()
         new_transform = (1.5, (0, 0))
-        mag_api.fullscreen.transform_from(new_transform)
+        mag_api.fullscreen.transform.raw = new_transform
         self.assertEqual(
             mag_api.fullscreen.transform.raw,
             new_transform
@@ -70,7 +70,7 @@ class NoControlWindowTest(unittest.TestCase):
         default_scale, (start_x, start_y) = mag.DEFAULT_FULLSCREEN_TRANSFORM
         mag_api.fullscreen.reset_transform()
         for i in range(max_scale):
-            with mag_api.fullscreen.transform as transform:
+            with mag_api.fullscreen.transform.batch() as transform:
                 transform.scale += step
                 transform.offset.x += 2 * step
                 transform.offset.y += 3 * step
@@ -84,22 +84,22 @@ class NoControlWindowTest(unittest.TestCase):
         )
 
         delay_for_visualize(1)
-        with mag_api.fullscreen.transform as transform:
-            transform.offset_from((150, 200))
-        self.assertEqual(mag_api.fullscreen.transform.offset.raw, (150, 200))
+        mag_api.fullscreen.transform.scale = 1
+        mag_api.fullscreen.transform.offset.pair = (150, 200)
+        self.assertEqual(mag_api.fullscreen.transform.offset.pair, (150, 200))
 
         delay_for_visualize(1)
         offset = 15
-        with mag_api.fullscreen.transform as transform:
-            transform.offset_from(offset)
+        mag_api.fullscreen.transform.offset.same = offset
         self.assertEqual(mag_api.fullscreen.transform.offset.x, offset)
         self.assertEqual(mag_api.fullscreen.transform.offset.y, offset)
+        self.assertEqual(mag_api.fullscreen.transform.offset.same, offset)
 
-        with mag_api.fullscreen.transform as transform:
+        with mag_api.fullscreen.transform.batch() as transform:
             transform.reset_offset()
             transform.reset_scale()
             transform.scale = 2
-        self.assertEqual(mag_api.fullscreen.transform.offset.raw, mag.DEFAULT_FULLSCREEN_TRANSFORM[1])
+        self.assertEqual(mag_api.fullscreen.transform.offset.pair, mag_api.fullscreen.default_transform.offset.pair)
         self.assertEqual(mag_api.fullscreen.transform.scale, 2)
 
         mag_api.fullscreen.reset_transform()
@@ -111,9 +111,7 @@ class NoControlWindowTest(unittest.TestCase):
     def test_idempotent(self):
         mag_api = mag.WinMagnificationAPI()
         last = mag_api.fullscreen.transform
-        mag_api.fullscreen.transform_from(last)
-        self.assertEqual(mag_api.fullscreen.transform, last)
-        mag_api.fullscreen.transform_from(last.raw)
+        mag_api.fullscreen.transform.raw = last.raw
         self.assertEqual(mag_api.fullscreen.transform.raw, last.raw)
 
     def test_gradation(self):
@@ -132,16 +130,16 @@ class NoControlWindowTest(unittest.TestCase):
     def test_input_transform(self):
         mag_api = mag.WinMagnificationAPI()
         rectangles = (0, 0, 2, 2), (0, 0, 3, 3)
-        self.assertEqual(mag_api.fullscreen.input_transform.raw, (False, *((0,)*4,)*2))
+        self.assertEqual(mag_api.fullscreen.input_transform.raw, (False, *((0,) * 4,) * 2))
         with suppress(OSError):
-            mag_api.fullscreen.input_transform_from((True, *rectangles))
+            mag_api.fullscreen.input_transform.raw = True, *rectangles
             self.assertTrue(mag_api.fullscreen.input_transform.enabled)
             self.assertEqual(mag_api.fullscreen.input_transform.source, rectangles[0])
             self.assertEqual(mag_api.fullscreen.input_transform.destination, rectangles[1])
             mag_api.fullscreen.input_transform = mag_api.fullscreen.input_transform
-            self.assertEqual(mag_api.fullscreen.input_transform.raw,  (True, *rectangles))
+            self.assertEqual(mag_api.fullscreen.input_transform.raw, (True, *rectangles))
         with suppress(OSError):
-            with mag_api.fullscreen.input_transform as input_transform:
+            with mag_api.fullscreen.input_transform.batch() as input_transform:
                 input_transform.destination = (0, 0, 0, 0)
                 input_transform.source = (0, 0, 0, 0)
                 input_transform.enabled = False
@@ -171,18 +169,19 @@ class MagnificationControlWindowTest(unittest.TestCase):
     def test_effects(self):
         self.window.fullscreen_mode = True
         scale = 1.5
-        self.window.controller.scale_from(scale)
+        self.window.controller.scale.same = scale
         self.window.controller.color_effect = mag.COLOR_INVERSION_EFFECT
         self.assertEqual(self.window.controller.source, self.window.current_rectangle)
+        self.assertEqual(self.window.controller.scale.same, scale)
         self.assertEqual(self.window.controller.scale.pair, (scale, scale))
         delay_for_visualize(1)
-        self.window.controller.scale_from((scale, scale * 2))
+        self.window.controller.scale.pair = scale, scale * 2
         self.assertEqual(self.window.controller.scale.x, scale)
         self.assertEqual(self.window.controller.scale.y, 2*scale)
         self.window.fullscreen_mode = False
         delay_for_visualize(1)
         self.window.controller.reset_scale()
-        self.assertEqual(self.window.controller.scale.raw, mag.DEFAULT_TRANSFORM)
+        self.assertEqual(self.window.controller.scale.matrix, mag.DEFAULT_TRANSFORM)
         self.assertEqual(self.window.controller.color_effect, mag.COLOR_INVERSION_EFFECT)
         self.assertEqual(self.window.fullscreen_mode, False)
         delay_for_visualize(1)
@@ -197,10 +196,8 @@ class MagnificationControlWindowTest(unittest.TestCase):
 
     def test_idempotent(self):
         last = self.window.controller.scale
-        self.window.controller.scale_from(last)
-        self.assertEqual(self.window.controller.scale, last)
-        self.window.controller.scale_from(last.raw)
-        self.assertEqual(self.window.controller.scale.raw, last.raw)
+        self.window.controller.scale.pair = last.pair
+        self.assertEqual(self.window.controller.scale.pair, last.pair)
         self.window.controller.reset_scale()
         self.assertEqual(self.window.controller.scale, self.window.controller.default_scale)
 

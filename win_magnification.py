@@ -13,6 +13,8 @@ import _wrapper
 from _wrapper import *
 import typing
 
+from utils import PropertiesObserver
+
 
 @_utils.require_single_thread()  # type: ignore
 def initialize() -> None:
@@ -93,166 +95,134 @@ class WinMagnificationAPI:
 
 
 @dataclass
-class Offset:
+class Offset(PropertiesObserver):
     x: int
     y: int
 
-    @classmethod
-    def same(cls, value: int):
-        return cls(value, value)
-
-    @property
-    def raw(self):
-        return self.x, self.y
-
-    @classmethod
-    def convert(cls, value: typing.Union[int, tuple[int, int]]):
-        if isinstance(value, int):
-            return cls.same(value)
-        return cls(*value)
-
-
-@dataclass
-class FullscreenTransform:
-    """
-    Fullscreen transformation representation
-    Note: to change properties use `with` block:
-
-    with api.fullscreen.transform as transform:
-        transform.offset.x += 1
-    """
-
-    scale: float
-    offset: Offset
-
-    def offset_from(self, value: typing.Union[int, tuple[int, int], Offset]):
-        if not isinstance(value, Offset):
-            value = Offset.convert(value)
-        self.offset = value
-
-    @property
-    def default_scale(self):
-        return DEFAULT_FULLSCREEN_TRANSFORM[0]
-
-    @property
-    def default_offset(self):
-        return Offset(DEFAULT_FULLSCREEN_TRANSFORM[1][0], DEFAULT_FULLSCREEN_TRANSFORM[1][1])
-
-    def reset_scale(self):
-        self.scale = self.default_scale
-
-    def reset_offset(self):
-        self.offset = self.default_offset
-
-    @property
-    def raw(self) -> FullscreenTransformRaw:
-        return self.scale, self.offset.raw
-
-    @classmethod
-    def from_raw(cls, value: FullscreenTransformRaw):
-        return cls(value[0], Offset(*value[1]))
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if exc_type is None:
-            set_fullscreen_transform(*self.raw)
-
-
-@dataclass
-class InputTransform:
-    """
-    Input transformation representation
-    Note: to change properties use `with` block:
-
-    with api.fullscreen.input_transform as input_transform:
-        input_transform.offset.x += 1
-    """
-
-    enabled: bool
-    source: Rectangle
-    destination: Rectangle
-
-    @property
-    def raw(self) -> InputTransformRaw:
-        return self.enabled, self.source, self.destination
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if exc_type is None:
-            set_input_transform(*self.raw)
-
-
-@dataclass
-class WindowTransform:
-    x: float
-    y: float
-    __x_pos = pos_for_matrix(TransformationMatrixSize, 0, 0)
-    __y_pos = pos_for_matrix(TransformationMatrixSize, 1, 1)
-
     def __post_init__(self):
-        self._raw = list(get_transform_matrix(self.x, self.y))
+        super().__init__()
 
     @property
-    def raw(self) -> TransformationMatrix:
-        self._raw[self.__x_pos] = self.x
-        self._raw[self.__y_pos] = self.y
-        # noinspection PyTypeChecker
-        return tuple(self._raw)  # type: ignore
+    def same(self) -> int:
+        return self.x
+
+    @same.setter
+    def same(self, value: int):
+        self.pair = value, value
 
     @property
     def pair(self):
         return self.x, self.y
 
-    @classmethod
-    def from_raw(cls, value: TransformationMatrix):
-        result = cls(value[cls.__x_pos], value[cls.__y_pos])
-        cls._raw = list(value)
-        return result
+    @pair.setter
+    def pair(self, value: tuple[int, int]):
+        with self.batch():
+            self.x, self.y = value
+
+
+@dataclass
+class FullscreenTransform(PropertiesObserver):
+    scale: float
+    offset: Offset
+
+    def __post_init__(self):
+        super().__init__()
+
+    def reset_scale(self):
+        self.scale = DEFAULT_FULLSCREEN_TRANSFORM[0]
+
+    def reset_offset(self):
+        self.offset = Offset(*DEFAULT_FULLSCREEN_TRANSFORM[1])
+
+    @property
+    def raw(self) -> FullscreenTransformRaw:
+        return self.scale, self.offset.pair
+
+    @raw.setter
+    def raw(self, value: FullscreenTransformRaw):
+        with self.batch():
+            self.scale, self.offset.pair = value
 
     @classmethod
-    def same(cls, value: float):
-        return cls(value, value)
+    def from_raw(cls, value: FullscreenTransformRaw):
+        return cls(value[0], Offset(*value[1]))
 
-    @classmethod
-    def convert(cls, value: typing.Union[
-        float, tuple[float, float],
-        TransformationMatrix
-    ]):
-        if isinstance(value, float):
-            return cls.same(value)
-        if isinstance(value, tuple) and len(value) == 2:
-            return cls(*value)
+
+@dataclass
+class InputTransform(PropertiesObserver):
+    enabled: bool
+    source: Rectangle
+    destination: Rectangle
+
+    def __post_init__(self):
+        super().__init__()
+
+    @property
+    def raw(self) -> InputTransformRaw:
+        return self.enabled, self.source, self.destination
+
+    @raw.setter
+    def raw(self, value: InputTransformRaw):
+        with self.batch():
+            self.enabled, self.source, self.destination = value
+
+
+@dataclass
+class WindowTransform(PropertiesObserver):
+    x: float
+    y: float
+    __x_pos = pos_for_matrix(TransformationMatrixSize, 0, 0)
+    __y_pos = pos_for_matrix(TransformationMatrixSize, 1, 1)
+    _matrix = None
+
+    def __post_init__(self):
+        super().__init__()
+        self._matrix = list(get_transform_matrix(self.x, self.y))
+
+    @property
+    def pair(self) -> tuple[float, float]:
+        return self.x, self.y
+
+    @pair.setter
+    def pair(self, value: tuple[float, float]):
+        with self.batch():
+            self.x, self.y = value
+
+    @property
+    def same(self) -> float:
+        return self.x
+
+    @same.setter
+    def same(self, value: float):
+        self.pair = value, value
+
+    @property
+    def matrix(self) -> TransformationMatrix:
+        self._matrix[self.__x_pos] = self.x
+        self._matrix[self.__y_pos] = self.y
         # noinspection PyTypeChecker
-        return cls.from_raw(value)  # type: ignore
+        return tuple(self._matrix)  # type: ignore
+
+    @matrix.setter
+    def matrix(self, value: TransformationMatrix):
+        self._matrix = list(value)
+        self.pair = value[self.__x_pos], value[self.__y_pos]
+
+    @classmethod
+    def from_matrix(cls, value: TransformationMatrix):
+        result = cls(0, 0)
+        result.matrix = value
+        return result
 
 
 class FullscreenController:
     @property
     def transform(self):
-        """
-        Note: to change properties use `with` block:
-
-        with api.fullscreen.transform as transform:
-            transform.offset.x += 1
-        """
-        return FullscreenTransform.from_raw(
+        result = FullscreenTransform.from_raw(
             get_fullscreen_transform()
         )
-
-    @transform.setter
-    def transform(self, value: FullscreenTransform):
-        set_fullscreen_transform(*value.raw)
-
-    def transform_from(self, value: typing.Union[
-        FullscreenTransform, FullscreenTransformRaw
-    ]):
-        if not isinstance(value, FullscreenTransform):
-            value = FullscreenTransform.from_raw(value)  # type: ignore
-        self.transform = value
+        result.subscribe(lambda: set_fullscreen_transform(*result.raw))
+        return result
 
     @property
     def default_transform(self):
@@ -280,15 +250,9 @@ class FullscreenController:
 
     @property
     def input_transform(self):
-        return InputTransform(*get_input_transform())
-
-    @input_transform.setter
-    def input_transform(self, value: InputTransform):
-        set_input_transform(*value.raw)
-
-    @staticmethod
-    def input_transform_from(value: InputTransformRaw):
-        set_input_transform(*value)
+        result = InputTransform(*get_input_transform())
+        result.subscribe(lambda: set_input_transform(*result.raw))
+        return result
 
     @staticmethod
     def set_cursor_visibility(show_cursor: bool):
@@ -301,29 +265,18 @@ class CustomWindowController:
 
     @property
     def scale(self):
-        """
-        Note: properties changes don't reflect on actual window scale,
-        use scale setter to apply changes
-        """
-        return WindowTransform.from_raw(
+        result = WindowTransform.from_matrix(
             get_transform(self.hwnd)
         )
-
-    @scale.setter
-    def scale(self, value: WindowTransform):
-        set_transform_advanced(self.hwnd, value.raw)
-
-    def scale_from(self, value: typing.Union[
-        float, tuple[float, float],
-        TransformationMatrix, WindowTransform
-    ]):
-        if not isinstance(value, WindowTransform):
-            value = WindowTransform.convert(value)
-        self.scale = value
+        result.subscribe(lambda: set_transform_advanced(
+            self.hwnd,
+            result.matrix
+        ))
+        return result
 
     @property
     def default_scale(self):
-        return WindowTransform.from_raw(DEFAULT_TRANSFORM)
+        return WindowTransform.from_matrix(DEFAULT_TRANSFORM)
 
     def reset_scale(self):
         reset_transform(self.hwnd)
