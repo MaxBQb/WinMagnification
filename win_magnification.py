@@ -67,10 +67,10 @@ reset_color_effect = partial(set_color_effect, effect=DEFAULT_COLOR_EFFECT)
 # Object-Oriented Interface
 class WinMagnificationAPI:
     def __init__(self):
-        initialize()
         self.__disposed = False
         self.__fullscreen = FullscreenController()
         self.__window = CustomWindowController()
+        initialize()
 
     @property
     def fullscreen(self):
@@ -153,7 +153,7 @@ class Rectangle(ObservableWrapper[RectangleRaw]):
 
     @property
     def end(self):
-        return self.left, self.top
+        return self.right, self.bottom
 
     @end.setter
     def end(self, value: tuple[int, int]):
