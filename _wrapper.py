@@ -156,7 +156,7 @@ def get_transform(hwnd: int) -> TransformationMatrix:
 
 
 @_utils.raise_win_errors
-def set_source(hwnd: int, rectangle: Rectangle) -> None:
+def set_source(hwnd: int, rectangle: RectangleRaw) -> None:
     """
     Sets the source rectangle for the magnification window.
 
@@ -166,7 +166,7 @@ def set_source(hwnd: int, rectangle: Rectangle) -> None:
     return _DLL.MagSetWindowSource(hwnd, RECT(*rectangle))
 
 
-def get_source(hwnd: int) -> Rectangle:
+def get_source(hwnd: int) -> RectangleRaw:
     """
     Gets the rectangle of the area that is being magnified.
 
@@ -222,7 +222,7 @@ def get_filters(hwnd: int) -> tuple[bool, tuple[int]]:
 
 
 @_utils.raise_win_errors
-def set_input_transform(is_enabled: bool, source: Rectangle, destination: Rectangle) -> None:
+def set_input_transform(is_enabled: bool, source: RectangleRaw, destination: RectangleRaw) -> None:
     """
     Sets the current active input transformation for pen and touch input,
     represented as a source rectangle and a destination rectangle.

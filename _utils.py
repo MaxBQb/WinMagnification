@@ -12,7 +12,7 @@ from ctypes.wintypes import RECT
 from functools import wraps
 from typing import Callable, ParamSpec
 
-from constants import Rectangle
+from constants import RectangleRaw
 
 P = ParamSpec("P")
 
@@ -45,7 +45,7 @@ def to_c_array(matrix: tuple, content_type=c_float):
     return (content_type * len(matrix))(*matrix)
 
 
-def to_py_rectangle(rectangle: RECT) -> Rectangle:
+def to_py_rectangle(rectangle: RECT) -> RectangleRaw:
     # noinspection PyTypeChecker
     return (  # type: ignore
         rectangle.left,

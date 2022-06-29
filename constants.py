@@ -51,8 +51,8 @@ TransformationMatrixSize: int = 3**2
 
 
 FullscreenTransformRaw = tuple[float, tuple[int, int]]
-Rectangle = tuple[int, int, int, int]
-InputTransformRaw = tuple[bool, Rectangle, Rectangle]
+RectangleRaw = tuple[int, int, int, int]
+InputTransformRaw = tuple[bool, RectangleRaw, RectangleRaw]
 """
 Tuple of ints: (left, top, right, bottom)
 """

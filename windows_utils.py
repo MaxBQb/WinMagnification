@@ -12,14 +12,14 @@ import win32con  # type: ignore
 import win32gui  # type: ignore
 
 import win_magnification as mag
-from constants import Rectangle
+from constants import RectangleRaw
 
 # make_partial_screen & make_fullscreen
 # Inspired by:
 # https://github.com/microsoft/Windows-classic-samples/blob/main/Samples/Magnification/cpp/Windowed/MagnifierSample.cpp
 
 
-def make_partial_screen(hwnd, rectangle: Rectangle):
+def make_partial_screen(hwnd, rectangle: RectangleRaw):
     win32gui.SetWindowLong(
         hwnd,
         win32con.GWL_EXSTYLE,
@@ -45,7 +45,7 @@ def make_partial_screen(hwnd, rectangle: Rectangle):
     )
 
 
-def get_fullscreen_size() -> Rectangle:
+def get_fullscreen_size() -> RectangleRaw:
     # Calculate the span of the display area.
     max_x = win32api.GetSystemMetrics(win32con.SM_CXSCREEN)
     max_y = win32api.GetSystemMetrics(win32con.SM_CYSCREEN)
@@ -55,7 +55,7 @@ def get_fullscreen_size() -> Rectangle:
 
 
 # noinspection SpellCheckingInspection
-def make_fullscreen(hwnd, rectangle: Rectangle):
+def make_fullscreen(hwnd, rectangle: RectangleRaw):
     # The window must be styled as layered for proper rendering.
     # It is styled as transparent so that it does not capture mouse clicks.
     # For draw on top of TaskManager/System menus we need to use win10 zBand
@@ -104,12 +104,12 @@ class AbstractWindow(metaclass=ABCMeta):
         self.position = (0, 0)
         self.size = (400, 400)
         # noinspection PyTypeChecker
-        self.rectangle: Rectangle = (*self.position, *self.size)
-        self._fullscreen_rectangle: Rectangle = (0, 0, 200, 200)
+        self.rectangle: RectangleRaw = (*self.position, *self.size)
+        self._fullscreen_rectangle: RectangleRaw = (0, 0, 200, 200)
         self._fullscreen_mode = False
 
     @property
-    def rectangle(self) -> Rectangle:
+    def rectangle(self) -> RectangleRaw:
         # noinspection PyTypeChecker
         return *self.position, *self.size  # type: ignore
 
@@ -318,7 +318,7 @@ class MagnifierWindow(BasicWindow):
         if not self.is_alive:
             return
 
-        self.controller.source = self.current_rectangle
+        self.controller.source.raw = self.current_rectangle
 
         if self.hwnd is None:
             return

@@ -3,6 +3,7 @@ Additional tools available for programmer
 
 Author: MaxBQb
 """
+import abc
 import contextlib
 import math
 import threading
@@ -14,7 +15,7 @@ import constants
 def pos_for_matrix(array_len: int, *coords: int) -> int:
     row_len = int(math.log(array_len, len(coords)))
     return sum(
-        row_len**i * pos for (i, pos) in enumerate(reversed(coords), 0)
+        row_len ** i * pos for (i, pos) in enumerate(reversed(coords), 0)
     )
 
 
@@ -27,8 +28,8 @@ def get_transform_matrix(x=1.0, y=1.0) -> constants.TransformationMatrix:
 
 
 def get_color_matrix(
-    mul_red=1.0, mul_green=1.0, mul_blue=1.0, mul_alpha=1.0,
-    add_red=0.0, add_green=0.0, add_blue=0.0, add_alpha=0.0,
+        mul_red=1.0, mul_green=1.0, mul_blue=1.0, mul_alpha=1.0,
+        add_red=0.0, add_green=0.0, add_blue=0.0, add_alpha=0.0,
 ) -> constants.ColorMatrix:
     return (
         mul_red, 0.0, 0.0, 0.0, 0.0,
@@ -40,7 +41,7 @@ def get_color_matrix(
 
 
 def get_color_matrix_inversion(value=1.0):
-    value2 = value*2-1.0
+    value2 = value * 2 - 1.0
     return get_color_matrix(
         mul_red=-value2,
         mul_green=-value2,
@@ -49,6 +50,9 @@ def get_color_matrix_inversion(value=1.0):
         add_green=value,
         add_blue=value,
     )
+
+
+PropertiesObserverType = typing.TypeVar('PropertiesObserverType', bound='PropertiesObserver')
 
 
 class PropertiesObserver:
@@ -67,9 +71,9 @@ class PropertiesObserver:
 
     def __is_property_observed(self, name: str):
         return (
-            not name.startswith('_') and
-            name not in self._ignored_changes and
-            vars(self).get(name)
+                not name.startswith('_') and
+                name not in self._ignored_changes and
+                vars(self).get(name)
         )
 
     @contextlib.contextmanager
@@ -114,7 +118,7 @@ class PropertiesObserver:
             self._on_change()
 
     @contextlib.contextmanager
-    def batch(self):
+    def batch(self: PropertiesObserverType):
         """
         Use to apply changes at once
 
@@ -129,3 +133,84 @@ class PropertiesObserver:
             self._batching_changes -= 1
         if not self._batching_changes:
             self._on_change()
+
+
+T = typing.TypeVar('T')
+FieldWrapperType = typing.TypeVar('FieldWrapperType', bound='FieldWrapper')
+
+
+class FieldWrapper(typing.Generic[T], metaclass=abc.ABCMeta):
+    @classmethod
+    @abc.abstractmethod
+    def wrap(cls: typing.Type[FieldWrapperType], value: T) -> FieldWrapperType:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def raw(self) -> T:
+        pass
+
+
+class ObservableWrapper(PropertiesObserver, FieldWrapper[T], abc.ABC):
+    pass
+
+
+class CompositeField(typing.Generic[T]):
+    def __init__(
+        self,
+        source: typing.Callable[[], T],
+        setter: typing.Callable[[T], None],
+        default: T,
+    ):
+        self._source = source
+        self._setter = setter
+        self._default = default
+
+    @property
+    def default(self) -> T:
+        return self._default
+
+    @property
+    def raw(self) -> T:
+        return self._source()
+
+    @raw.setter
+    def raw(self, value: T):
+        self._setter(value)
+
+    @raw.deleter
+    def raw(self):
+        self.raw = self._default
+
+    def reset(self):
+        del self.raw
+
+
+E = typing.TypeVar('E', bound=ObservableWrapper)
+
+
+class CompositeWrappedField(CompositeField[T], typing.Generic[T, E]):
+    def __init__(
+        self,
+        wrapper: typing.Type[E],
+        source: typing.Callable[[], T],
+        setter: typing.Callable[[T], None],
+        default: T,
+    ):
+        super().__init__(source, setter, default)
+        self._wrapper: typing.Callable[[T], E] = wrapper.wrap
+        self._default_wrapped = self._wrapper(default)
+
+    @property
+    def default(self) -> E:  # type: ignore
+        return self._default_wrapped
+
+    @property
+    def value(self) -> E:
+        value = self._wrapper(self._source())
+        value.subscribe(lambda: self._setter(value.raw))
+        return value
+
+    @value.deleter
+    def value(self):
+        del self.raw

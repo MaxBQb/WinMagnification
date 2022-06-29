@@ -5,7 +5,7 @@ Author: MaxBQb
 Docs: https://docs.microsoft.com/en-us/windows/win32/api/_magapi/
 Header: https://pastebin.com/Lh82NjjM
 """
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import partial
 
 import _utils
@@ -95,7 +95,7 @@ class WinMagnificationAPI:
 
 
 @dataclass
-class Offset(PropertiesObserver):
+class Offset(ObservableWrapper[tuple[int, int]]):
     x: int
     y: int
 
@@ -108,48 +108,107 @@ class Offset(PropertiesObserver):
 
     @same.setter
     def same(self, value: int):
-        self.pair = value, value
+        self.raw = value, value
 
     @property
-    def pair(self):
+    def raw(self) -> tuple[int, int]:
         return self.x, self.y
 
-    @pair.setter
-    def pair(self, value: tuple[int, int]):
+    @raw.setter
+    def raw(self, value: tuple[int, int]):
         with self.batch():
             self.x, self.y = value
 
+    @classmethod
+    def wrap(cls, value: tuple[int, int]) -> 'Offset':
+        return cls(*value)
+
 
 @dataclass
-class FullscreenTransform(PropertiesObserver):
+class Rectangle(ObservableWrapper[RectangleRaw]):
+    left: int
+    top: int
+    right: int
+    bottom: int
+
+    def __post_init__(self):
+        super().__init__()
+
+    @property
+    def start(self):
+        return self.left, self.top
+
+    @start.setter
+    def start(self, value: tuple[int, int]):
+        with self.batch():
+            self.left, self.top = value
+
+    @property
+    def start_same(self):
+        return self.left
+
+    @start_same.setter
+    def start_same(self, value: int):
+        self.start = value, value
+
+    @property
+    def end(self):
+        return self.left, self.top
+
+    @end.setter
+    def end(self, value: tuple[int, int]):
+        with self.batch():
+            self.right, self.bottom = value
+
+    @property
+    def end_same(self):
+        return self.right
+
+    @end_same.setter
+    def end_same(self, value: int):
+        self.end = value, value
+
+    @property
+    def same(self) -> int:
+        return self.left
+
+    @same.setter
+    def same(self, value: int):
+        self.raw = value, value, value, value
+
+    @property
+    def raw(self) -> RectangleRaw:
+        return self.left, self.top, self.right, self.bottom
+
+    @raw.setter
+    def raw(self, value: RectangleRaw):
+        with self.batch():
+            self.left, self.top, self.right, self.bottom = value
+
+    @classmethod
+    def wrap(cls, value: RectangleRaw) -> 'Rectangle':
+        return cls(*value)
+
+
+@dataclass
+class FullscreenTransform(ObservableWrapper[FullscreenTransformRaw]):
     scale: float
     offset: Offset
 
     def __post_init__(self):
         super().__init__()
 
-    def reset_scale(self):
-        self.scale = DEFAULT_FULLSCREEN_TRANSFORM[0]
-
-    def reset_offset(self):
-        self.offset = Offset(*DEFAULT_FULLSCREEN_TRANSFORM[1])
-
     @property
     def raw(self) -> FullscreenTransformRaw:
-        return self.scale, self.offset.pair
-
-    @raw.setter
-    def raw(self, value: FullscreenTransformRaw):
-        with self.batch():
-            self.scale, self.offset.pair = value
+        return self.scale, self.offset.raw
 
     @classmethod
-    def from_raw(cls, value: FullscreenTransformRaw):
-        return cls(value[0], Offset(*value[1]))
+    def wrap(cls, value: FullscreenTransformRaw) -> 'FullscreenTransform':
+        return cls(value[0], Offset.wrap(value[1]))
 
 
 @dataclass
-class InputTransform(PropertiesObserver):
+class InputTransform(ObservableWrapper[InputTransformRaw]):
     enabled: bool
     source: Rectangle
     destination: Rectangle
@@ -159,21 +218,20 @@ class InputTransform(PropertiesObserver):
 
     @property
     def raw(self) -> InputTransformRaw:
-        return self.enabled, self.source, self.destination
+        return self.enabled, self.source.raw, self.destination.raw
 
-    @raw.setter
-    def raw(self, value: InputTransformRaw):
-        with self.batch():
-            self.enabled, self.source, self.destination = value
+    @classmethod
+    def wrap(cls, value: InputTransformRaw) -> 'InputTransform':
+        return cls(value[0], Rectangle.wrap(value[1]), Rectangle.wrap(value[2]))
 
 
 @dataclass
-class WindowTransform(PropertiesObserver):
+class WindowTransform(ObservableWrapper[TransformationMatrix]):
     x: float
     y: float
     __x_pos = pos_for_matrix(TransformationMatrixSize, 0, 0)
     __y_pos = pos_for_matrix(TransformationMatrixSize, 1, 1)
-    _matrix = None
+    _matrix: list[float] = None  # type: ignore
 
     def __post_init__(self):
         super().__init__()
@@ -197,118 +255,109 @@ class WindowTransform(PropertiesObserver):
         self.pair = value, value
 
     @property
-    def matrix(self) -> TransformationMatrix:
+    def raw(self) -> TransformationMatrix:
         self._matrix[self.__x_pos] = self.x
         self._matrix[self.__y_pos] = self.y
         # noinspection PyTypeChecker
         return tuple(self._matrix)  # type: ignore
 
-    @matrix.setter
-    def matrix(self, value: TransformationMatrix):
+    @raw.setter
+    def raw(self, value: TransformationMatrix):
         self._matrix = list(value)
         self.pair = value[self.__x_pos], value[self.__y_pos]
 
     @classmethod
-    def from_matrix(cls, value: TransformationMatrix):
+    def wrap(cls, value: TransformationMatrix) -> 'WindowTransform':
         result = cls(0, 0)
-        result.matrix = value
+        result.raw = value
         return result
 
 
 class FullscreenController:
+    def __init__(self):
+        self._cursor_visible = True
+        self._transform = CompositeWrappedField[FullscreenTransformRaw, FullscreenTransform](
+            FullscreenTransform,
+            get_fullscreen_transform,
+            lambda value: set_fullscreen_transform(*value),
+            DEFAULT_FULLSCREEN_TRANSFORM,
+        )
+        self._color_effect = CompositeField(
+            get_fullscreen_color_effect,
+            set_fullscreen_color_effect,
+            DEFAULT_COLOR_EFFECT,
+        )
+        self._input_transform_transform = CompositeWrappedField[InputTransformRaw, InputTransform](
+            InputTransform,
+            get_input_transform,
+            lambda value: set_input_transform(*value),
+            DEFAULT_INPUT_TRANSFORM,
+        )
+
     @property
     def transform(self):
-        result = FullscreenTransform.from_raw(
-            get_fullscreen_transform()
-        )
-        result.subscribe(lambda: set_fullscreen_transform(*result.raw))
-        return result
-
-    @property
-    def default_transform(self):
-        return FullscreenTransform.from_raw(DEFAULT_FULLSCREEN_TRANSFORM)
-
-    @staticmethod
-    def reset_transform():
-        reset_fullscreen_transform()
+        return self._transform
 
     @property
     def color_effect(self):
-        return get_fullscreen_color_effect()
-
-    @color_effect.setter
-    def color_effect(self, value: ColorMatrix):
-        set_fullscreen_color_effect(value)
-
-    @property
-    def default_color_effect(self):
-        return DEFAULT_COLOR_EFFECT
-
-    @staticmethod
-    def reset_color_effect():
-        reset_fullscreen_color_effect()
+        return self._color_effect
 
     @property
     def input_transform(self):
-        result = InputTransform(*get_input_transform())
-        result.subscribe(lambda: set_input_transform(*result.raw))
-        return result
+        return self._input_transform_transform
 
-    @staticmethod
-    def set_cursor_visibility(show_cursor: bool):
-        set_cursor_visibility(show_cursor)
+    @property
+    def cursor_visible(self):
+        """Doesn't reflect actual value, shows last used value instead"""
+        return self._cursor_visible
+
+    @cursor_visible.setter
+    def cursor_visible(self, value: bool):
+        self._cursor_visible = value
+        set_cursor_visibility(value)
 
 
 class CustomWindowController:
     def __init__(self):
         self.hwnd = 0
+        self._scale = CompositeWrappedField[TransformationMatrix, WindowTransform](
+            WindowTransform,
+            lambda: get_transform(self.hwnd),
+            lambda result: set_transform_advanced(
+                self.hwnd,
+                result
+            ),
+            DEFAULT_TRANSFORM,
+        )
+        self._color_effect = CompositeField(
+            lambda: get_color_effect(self.hwnd),
+            lambda value: set_color_effect(self.hwnd, value),
+            DEFAULT_COLOR_EFFECT,
+        )
+        self._source = CompositeWrappedField(
+            Rectangle,
+            lambda: get_source(self.hwnd),
+            lambda value: set_source(self.hwnd, value),
+            DEFAULT_SOURCE,
+        )
+        self._filters = CompositeField(
+            lambda: get_filters(self.hwnd)[1],
+            lambda value: set_filters(self.hwnd, *value),
+            DEFAULT_FILTERS_LIST,
+        )
 
     @property
     def scale(self):
-        result = WindowTransform.from_matrix(
-            get_transform(self.hwnd)
-        )
-        result.subscribe(lambda: set_transform_advanced(
-            self.hwnd,
-            result.matrix
-        ))
-        return result
-
-    @property
-    def default_scale(self):
-        return WindowTransform.from_matrix(DEFAULT_TRANSFORM)
-
-    def reset_scale(self):
-        reset_transform(self.hwnd)
+        return self._scale
 
     @property
     def color_effect(self):
-        return get_color_effect(self.hwnd)
-
-    @color_effect.setter
-    def color_effect(self, value: ColorMatrix):
-        set_color_effect(self.hwnd, value)
-
-    @property
-    def default_color_effect(self):
-        return DEFAULT_COLOR_EFFECT
-
-    def reset_color_effect(self):
-        reset_color_effect(self.hwnd)
+        return self._color_effect
 
     @property
     def source(self):
-        return get_source(self.hwnd)
-
-    @source.setter
-    def source(self, value: Rectangle):
-        set_source(self.hwnd, value)
+        return self._source
 
     @property
     def filters(self):
-        _, filters = get_filters(self.hwnd)
-        return filters
-
-    @filters.setter
-    def filters(self, value: tuple):
-        set_filters(self.hwnd, *value)
+        return self._filters
