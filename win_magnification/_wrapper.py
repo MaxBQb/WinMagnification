@@ -6,8 +6,8 @@ Header: https://pastebin.com/Lh82NjjM
 from ctypes import *
 from ctypes.wintypes import *
 from typing import Optional
-from defaults import *
-import _utils
+from .defaults import *
+from . import _utils
 
 _DLL = WinDLL('magnification.dll')
 
@@ -282,69 +282,50 @@ def set_cursor_visibility(show_cursor: bool):
 
 
 # C-Function original names and signatures
-MagInitialize = initialize
 _DLL.MagInitialize.restype = BOOL
-
-# noinspection SpellCheckingInspection
-MagUninitialize = finalize
 _DLL.MagUninitialize.restype = BOOL
 
-MagGetFullscreenColorEffect = get_fullscreen_color_effect
 _DLL.MagGetFullscreenColorEffect.restype = BOOL
 _DLL.MagGetFullscreenColorEffect.argtypes = (_PMAGCOLOREFFECT,)
 
-MagSetFullscreenColorEffect = set_fullscreen_color_effect
 _DLL.MagSetFullscreenColorEffect.restype = BOOL
 _DLL.MagSetFullscreenColorEffect.argtypes = (_PMAGCOLOREFFECT,)
 
-MagSetFullscreenTransform = set_fullscreen_transform
 _DLL.MagSetFullscreenTransform.restype = BOOL
 _DLL.MagSetFullscreenTransform.argtypes = (c_float, c_int, c_int)
 
-MagGetFullscreenTransform = get_fullscreen_transform
 _DLL.MagGetFullscreenTransform.restype = BOOL
 _DLL.MagGetFullscreenTransform.argtypes = (POINTER(c_float), POINTER(c_int), POINTER(c_int))
 
-MagSetColorEffect = set_color_effect
 _DLL.MagSetColorEffect.restype = BOOL
 _DLL.MagSetColorEffect.argtypes = (HWND, _PMAGCOLOREFFECT,)
 
-MagGetColorEffect = get_color_effect
 _DLL.MagGetColorEffect.restype = BOOL
 _DLL.MagGetColorEffect.argtypes = (HWND, _PMAGCOLOREFFECT,)
 
-MagSetWindowTransform = set_transform
 _DLL.MagSetWindowTransform.restype = BOOL
 _DLL.MagSetWindowTransform.argtypes = (HWND, _PMAGTRANSFORM,)
 
-MagGetWindowTransform = get_transform
 _DLL.MagGetWindowTransform.restype = BOOL
 _DLL.MagGetWindowTransform.argtypes = (HWND, _PMAGTRANSFORM,)
 
-MagSetWindowSource = set_source
 _DLL.MagSetWindowSource.restype = BOOL
 _DLL.MagSetWindowSource.argtypes = (HWND, RECT)
 
-MagGetWindowSource = get_source
 _DLL.MagGetWindowSource.restype = BOOL
 _DLL.MagGetWindowSource.argtypes = (HWND, POINTER(RECT))
 
-MagSetWindowFilterList = set_filters
 _DLL.MagSetWindowFilterList.restype = BOOL
 _DLL.MagSetWindowFilterList.argtypes = (HWND, DWORD, c_int, POINTER(HWND))
 
-MagGetWindowFilterList = get_filters
 _DLL.MagGetWindowFilterList.restype = BOOL
 _DLL.MagGetWindowFilterList.argtypes = (HWND, POINTER(DWORD), c_int, POINTER(HWND))
 
-MagGetInputTransform = get_input_transform
 _DLL.MagGetInputTransform.restype = BOOL
 _DLL.MagGetInputTransform.argtypes = (POINTER(BOOL), POINTER(RECT), POINTER(RECT))
 
-MagSetInputTransform = set_input_transform
 _DLL.MagSetInputTransform.restype = BOOL
 _DLL.MagSetInputTransform.argtypes = (BOOL, POINTER(RECT), POINTER(RECT))
 
-MagShowSystemCursor = set_cursor_visibility
 _DLL.MagShowSystemCursor.restype = BOOL
 _DLL.MagShowSystemCursor.argtypes = (BOOL,)

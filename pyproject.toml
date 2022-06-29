@@ -1,0 +1,23 @@
+[project]
+name = "WinMagnification"
+version = "0.0.1"
+authors = [
+  { name="MaxBQb" },
+]
+description = "Python wrapper for Windows Magnification API"
+readme = "README.md"
+license = { file="LICENSE.md" }
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Windows",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/MaxBQb/WinMagnification"
+"Bug Tracker" = "https://github.com/MaxBQb/WinMagnification/issues"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

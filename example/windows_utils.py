@@ -12,7 +12,8 @@ import win32con  # type: ignore
 import win32gui  # type: ignore
 
 import win_magnification as mag
-from constants import RectangleRaw
+import win_magnification._object_wrapper
+from win_magnification.constants import RectangleRaw
 
 # make_partial_screen & make_fullscreen
 # Inspired by:
@@ -243,10 +244,10 @@ class MagnifierWindow(BasicWindow):
     def __init__(self):
         super().__init__()
         self.magnifier_hwnd: Optional[int] = None
-        self.__magnifier: Optional[mag.WinMagnificationAPI] = None
+        self.__magnifier: Optional[win_magnification._object_wrapper.WinMagnificationAPI] = None
 
     def create_window(self):
-        self.__magnifier = mag.WinMagnificationAPI()
+        self.__magnifier = win_magnification._object_wrapper.WinMagnificationAPI()
         super().create_window()
 
     def _create_window(self):

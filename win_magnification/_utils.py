@@ -12,7 +12,7 @@ from ctypes.wintypes import RECT
 from functools import wraps
 from typing import Callable, ParamSpec
 
-from constants import RectangleRaw
+from .constants import RectangleRaw
 
 P = ParamSpec("P")
 

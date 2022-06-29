@@ -9,7 +9,7 @@ import math
 import threading
 import typing
 
-import constants
+from . import constants
 
 
 def pos_for_matrix(array_len: int, *coords: int) -> int:

@@ -1,10 +1,10 @@
-import concurrent.futures
 import threading
 import unittest
 from contextlib import suppress
 from itertools import cycle
 import win_magnification as mag
-import windows_utils
+import win_magnification.old as old_mag
+from example import windows_utils  # type: ignore
 import time
 
 # Change to see visual changes on test running
@@ -19,8 +19,8 @@ def delay_for_visualize(secs: float, apply=ALLOW_SLEEP):
 # noinspection PyMethodMayBeStatic
 class InitFinalizeTest(unittest.TestCase):
     def test_init_finalize(self):
-        mag.initialize()
-        mag.finalize()
+        old_mag.MagInitialize()
+        old_mag.MagUninitialize()
 
     def test_init_finalize_twice(self):
         mag.initialize()
@@ -211,7 +211,6 @@ class MagnificationControlWindowTest(unittest.TestCase):
         self.magnifier.color_effect.raw = mag.COLOR_INVERSION_EFFECT
         self.assertEqual(self.magnifier.source.raw, self.window.current_rectangle)
         with self.magnifier.source.value.batch() as source:
-            source: mag.Rectangle
             source.same = -1
             source.start_same = 0
             source.end_same = 8

@@ -3,8 +3,8 @@ Defaults for transformation and color effects
 
 Author: MaxBQb
 """
-from constants import *
-from utils import *
+from .constants import *
+from .utils import *
 
 # Color matrix
 NO_EFFECT: ColorMatrix = get_color_matrix()
