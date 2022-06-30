@@ -27,6 +27,7 @@ import win_magnification.old as old_mag
 
 old_mag.MagInitialize()
 old_mag.MagSetFullscreenColorEffect(mag.const.COLOR_INVERSION_EFFECT)
+old_mag.MagSetFullscreenColorEffect(mag.const.DEFAULT_COLOR_EFFECT)
 old_mag.MagUninitialize()
 ```
 
@@ -36,6 +37,7 @@ import win_magnification as mag
 
 mag.initialize()
 mag.set_fullscreen_color_effect(mag.const.COLOR_INVERSION_EFFECT)
+mag.reset_fullscreen_color_effect()
 mag.finalize()
 ```
 
@@ -44,7 +46,8 @@ Or... you can even use Object-Oriented wrapper:
 import win_magnification as mag
 
 api = mag.WinMagnificationAPI()
-api.fullscreen.color_effect = mag.const.COLOR_INVERSION_EFFECT
+api.fullscreen.color_effect.raw = mag.const.COLOR_INVERSION_EFFECT
+api.fullscreen.color_effect.reset()
 ```
 
 # Restrictions
