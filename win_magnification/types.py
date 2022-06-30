@@ -1,22 +1,11 @@
 """
-Constants and type hints
+Type hints
 
 Author: MaxBQb
 Docs: https://docs.microsoft.com/en-us/windows/win32/api/_magapi/
 Header: https://pastebin.com/Lh82NjjM
 """
 
-
-# C Constants (feel free to use)
-WC_MAGNIFIER = "Magnifier"  # Class registered only after initialize() call
-MS_SHOWMAGNIFIEDCURSOR = 1
-MS_CLIPAROUNDCURSOR = 2
-MS_INVERTCOLORS = 4
-MW_FILTERMODE_EXCLUDE = 0
-MW_FILTERMODE_INCLUDE = 1
-
-
-# Type hints
 ColorMatrix = tuple[
     float, float, float, float, float,
     float, float, float, float, float,
@@ -40,19 +29,17 @@ r+=x   g+=x   b+=x   a+=x   1
 
 More info: https://docs.microsoft.com/en-us/windows/win32/gdiplus/-gdiplus-using-a-color-matrix-to-transform-a-single-color-use
 """
-ColorMatrixSize: int = 5**2
 
 TransformationMatrix = tuple[
     float, float, float,
     float, float, float,
     float, float, float,
 ]
-TransformationMatrixSize: int = 3**2
-
 
 FullscreenTransformRaw = tuple[float, tuple[int, int]]
 RectangleRaw = tuple[int, int, int, int]
-InputTransformRaw = tuple[bool, RectangleRaw, RectangleRaw]
 """
 Tuple of ints: (left, top, right, bottom)
 """
+
+InputTransformRaw = tuple[bool, RectangleRaw, RectangleRaw]

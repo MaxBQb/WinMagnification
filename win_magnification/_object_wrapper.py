@@ -1,11 +1,15 @@
-from dataclasses import dataclass
+import dataclasses
+
+from . import _object_utils as _utils
 from ._wrapper import *
 from ._functional_wrapper import *  # type: ignore
-from .defaults import *
+from .const import *
+from . import tools
+from .types import *
 
 
-@dataclass
-class Offset(ObservableWrapper[tuple[int, int]]):
+@dataclasses.dataclass
+class Offset(_utils.ObservableWrapper[tuple[int, int]]):
     x: int
     y: int
 
@@ -34,8 +38,8 @@ class Offset(ObservableWrapper[tuple[int, int]]):
         return cls(*value)
 
 
-@dataclass
-class Rectangle(ObservableWrapper[RectangleRaw]):
+@dataclasses.dataclass
+class Rectangle(_utils.ObservableWrapper[RectangleRaw]):
     left: int
     top: int
     right: int
@@ -100,8 +104,8 @@ class Rectangle(ObservableWrapper[RectangleRaw]):
         return cls(*value)
 
 
-@dataclass
-class FullscreenTransform(ObservableWrapper[FullscreenTransformRaw]):
+@dataclasses.dataclass
+class FullscreenTransform(_utils.ObservableWrapper[FullscreenTransformRaw]):
     scale: float
     offset: Offset
 
@@ -117,8 +121,8 @@ class FullscreenTransform(ObservableWrapper[FullscreenTransformRaw]):
         return cls(value[0], Offset.wrap(value[1]))
 
 
-@dataclass
-class InputTransform(ObservableWrapper[InputTransformRaw]):
+@dataclasses.dataclass
+class InputTransform(_utils.ObservableWrapper[InputTransformRaw]):
     enabled: bool
     source: Rectangle
     destination: Rectangle
@@ -135,17 +139,17 @@ class InputTransform(ObservableWrapper[InputTransformRaw]):
         return cls(value[0], Rectangle.wrap(value[1]), Rectangle.wrap(value[2]))
 
 
-@dataclass
-class WindowTransform(ObservableWrapper[TransformationMatrix]):
+@dataclasses.dataclass
+class WindowTransform(_utils.ObservableWrapper[TransformationMatrix]):
     x: float
     y: float
-    __x_pos = pos_for_matrix(TransformationMatrixSize, 0, 0)
-    __y_pos = pos_for_matrix(TransformationMatrixSize, 1, 1)
+    __x_pos = tools.pos_for_matrix(TRANSFORMATION_MATRIX_SIZE, 0, 0)
+    __y_pos = tools.pos_for_matrix(TRANSFORMATION_MATRIX_SIZE, 1, 1)
     _matrix: list[float] = None  # type: ignore
 
     def __post_init__(self):
         super().__init__()
-        self._matrix = list(get_transform_matrix(self.x, self.y))
+        self._matrix = list(tools.get_transform_matrix(self.x, self.y))
 
     @property
     def pair(self) -> tuple[float, float]:
@@ -186,18 +190,18 @@ class WindowTransform(ObservableWrapper[TransformationMatrix]):
 class FullscreenController:
     def __init__(self):
         self._cursor_visible = True
-        self._transform = CompositeWrappedField[FullscreenTransformRaw, FullscreenTransform](
+        self._transform = _utils.CompositeWrappedField[FullscreenTransformRaw, FullscreenTransform](
             FullscreenTransform,
             get_fullscreen_transform,
             lambda value: set_fullscreen_transform(*value),
             DEFAULT_FULLSCREEN_TRANSFORM,
         )
-        self._color_effect = CompositeField(
+        self._color_effect = _utils.CompositeField(
             get_fullscreen_color_effect,
             set_fullscreen_color_effect,
             DEFAULT_COLOR_EFFECT,
         )
-        self._input_transform_transform = CompositeWrappedField[InputTransformRaw, InputTransform](
+        self._input_transform_transform = _utils.CompositeWrappedField[InputTransformRaw, InputTransform](
             InputTransform,
             get_input_transform,
             lambda value: set_input_transform(*value),
@@ -230,7 +234,7 @@ class FullscreenController:
 class CustomWindowController:
     def __init__(self):
         self.hwnd = 0
-        self._scale = CompositeWrappedField[TransformationMatrix, WindowTransform](
+        self._scale = _utils.CompositeWrappedField[TransformationMatrix, WindowTransform](
             WindowTransform,
             lambda: get_transform(self.hwnd),
             lambda result: set_transform_advanced(
@@ -239,18 +243,18 @@ class CustomWindowController:
             ),
             DEFAULT_TRANSFORM,
         )
-        self._color_effect = CompositeField(
+        self._color_effect = _utils.CompositeField(
             lambda: get_color_effect(self.hwnd),
             lambda value: set_color_effect(self.hwnd, value),
             DEFAULT_COLOR_EFFECT,
         )
-        self._source = CompositeWrappedField(
+        self._source = _utils.CompositeWrappedField(
             Rectangle,
             lambda: get_source(self.hwnd),
             lambda value: set_source(self.hwnd, value),
             DEFAULT_SOURCE,
         )
-        self._filters = CompositeField(
+        self._filters = _utils.CompositeField(
             lambda: get_filters(self.hwnd)[1],
             lambda value: set_filters(self.hwnd, *value),
             DEFAULT_FILTERS_LIST,

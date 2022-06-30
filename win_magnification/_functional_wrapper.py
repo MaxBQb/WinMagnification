@@ -1,7 +1,9 @@
-from functools import partial
+import typing
 
 from . import _utils, _wrapper
-from .defaults import *
+from . import const
+from . import types
+from . import tools
 
 
 @_utils.require_single_thread()  # type: ignore
@@ -25,7 +27,7 @@ def finalize() -> None:
     _utils.thread_holder.release_thread()
 
 
-def set_transform_advanced(hwnd: int, matrix: TransformationMatrix) -> None:
+def set_transform_advanced(hwnd: int, matrix: types.TransformationMatrix) -> None:
     """
     Sets the transformation matrix for a magnifier control.
 
@@ -43,10 +45,36 @@ def set_transform(hwnd: int, scale: typing.Union[float, tuple[float, float]]):  
     :param scale: Magnification factor, or it's separate x, y components
     """
     scale_x, scale_y = scale if isinstance(scale, tuple) else (scale, scale)
-    set_transform_advanced(hwnd, get_transform_matrix(scale_x, scale_y))
+    set_transform_advanced(hwnd, tools.get_transform_matrix(scale_x, scale_y))
 
 
-reset_fullscreen_color_effect = partial(_wrapper.set_fullscreen_color_effect, effect=DEFAULT_COLOR_EFFECT)
-reset_fullscreen_transform = partial(_wrapper.set_fullscreen_transform, *DEFAULT_FULLSCREEN_TRANSFORM)
-reset_transform = partial(set_transform_advanced, matrix=DEFAULT_TRANSFORM)
-reset_color_effect = partial(_wrapper.set_color_effect, effect=DEFAULT_COLOR_EFFECT)
+def reset_fullscreen_color_effect():
+    """
+    Resets the color transformation matrix associated with the full-screen magnifier.
+    """
+    _wrapper.set_fullscreen_color_effect(const.DEFAULT_COLOR_EFFECT)
+
+
+def reset_fullscreen_transform():
+    """
+    Resets the magnification settings for the full-screen magnifier.
+    """
+    _wrapper.set_fullscreen_transform(*const.DEFAULT_FULLSCREEN_TRANSFORM)
+
+
+def reset_transform(hwnd: int):
+    """
+    Resets the transformation matrix for a magnifier control.
+
+    :param hwnd: The handle of the magnification window.
+    """
+    set_transform_advanced(hwnd, const.DEFAULT_TRANSFORM)
+
+
+def reset_color_effect(hwnd: int):
+    """
+    Resets the color transformation matrix for a magnifier control.
+
+    :param hwnd: The handle of the magnification window.
+    """
+    _wrapper.set_color_effect(hwnd, const.DEFAULT_COLOR_EFFECT)

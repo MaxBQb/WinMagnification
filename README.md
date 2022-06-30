@@ -20,21 +20,31 @@ Covered functions:
 + MagSetInputTransform
 + MagShowSystemCursor
 
-You may use old-Style function names:
+You may use old-style function names:
 ```py
-import win_magnification.old
+import win_magnification as mag
+import win_magnification.old as old_mag
+
+old_mag.MagInitialize()
+old_mag.MagSetFullscreenColorEffect(mag.const.COLOR_INVERSION_EFFECT)
+old_mag.MagUninitialize()
 ```
 
 Or you may use more pythonic function names:
 ```py
-import win_magnification
+import win_magnification as mag
+
+mag.initialize()
+mag.set_fullscreen_color_effect(mag.const.COLOR_INVERSION_EFFECT)
+mag.finalize()
 ```
 
-You can even use Object-Oriented wrapper:
+Or... you can even use Object-Oriented wrapper:
 ```py
 import win_magnification as mag
 
 api = mag.WinMagnificationAPI()
+api.fullscreen.color_effect = mag.const.COLOR_INVERSION_EFFECT
 ```
 
 # Restrictions

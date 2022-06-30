@@ -1,58 +1,9 @@
-"""
-Additional tools available for programmer
-
-Author: MaxBQb
-"""
 import abc
 import contextlib
-import math
 import threading
 import typing
 
-from . import constants
-
-
-def pos_for_matrix(array_len: int, *coords: int) -> int:
-    row_len = int(math.log(array_len, len(coords)))
-    return sum(
-        row_len ** i * pos for (i, pos) in enumerate(reversed(coords), 0)
-    )
-
-
-def get_transform_matrix(x=1.0, y=1.0) -> constants.TransformationMatrix:
-    return (
-        x, 0.0, 0.0,
-        0.0, y, 0.0,
-        0.0, 0.0, 1.0,
-    )
-
-
-def get_color_matrix(
-        mul_red=1.0, mul_green=1.0, mul_blue=1.0, mul_alpha=1.0,
-        add_red=0.0, add_green=0.0, add_blue=0.0, add_alpha=0.0,
-) -> constants.ColorMatrix:
-    return (
-        mul_red, 0.0, 0.0, 0.0, 0.0,
-        0.0, mul_green, 0.0, 0.0, 0.0,
-        0.0, 0.0, mul_blue, 0.0, 0.0,
-        0.0, 0.0, 0.0, mul_alpha, 0.0,
-        add_red, add_green, add_blue, add_alpha, 1.0,
-    )
-
-
-def get_color_matrix_inversion(value=1.0):
-    value2 = value * 2 - 1.0
-    return get_color_matrix(
-        mul_red=-value2,
-        mul_green=-value2,
-        mul_blue=-value2,
-        add_red=value,
-        add_green=value,
-        add_blue=value,
-    )
-
-
-PropertiesObserverType = typing.TypeVar('PropertiesObserverType', bound='PropertiesObserver')
+_PropertiesObserverType = typing.TypeVar('_PropertiesObserverType', bound='PropertiesObserver')
 
 
 class PropertiesObserver:
@@ -118,7 +69,7 @@ class PropertiesObserver:
             self._on_change()
 
     @contextlib.contextmanager
-    def batch(self: PropertiesObserverType):
+    def batch(self: _PropertiesObserverType):
         """
         Use to apply changes at once
 
@@ -135,47 +86,47 @@ class PropertiesObserver:
             self._on_change()
 
 
-T = typing.TypeVar('T')
-FieldWrapperType = typing.TypeVar('FieldWrapperType', bound='FieldWrapper')
+_T = typing.TypeVar('_T')
+_FieldWrapperType = typing.TypeVar('_FieldWrapperType', bound='FieldWrapper')
 
 
-class FieldWrapper(typing.Generic[T], metaclass=abc.ABCMeta):
+class FieldWrapper(typing.Generic[_T], metaclass=abc.ABCMeta):
     @classmethod
     @abc.abstractmethod
-    def wrap(cls: typing.Type[FieldWrapperType], value: T) -> FieldWrapperType:
+    def wrap(cls: typing.Type[_FieldWrapperType], value: _T) -> _FieldWrapperType:
         pass
 
     @property
     @abc.abstractmethod
-    def raw(self) -> T:
+    def raw(self) -> _T:
         pass
 
 
-class ObservableWrapper(PropertiesObserver, FieldWrapper[T], abc.ABC):
+class ObservableWrapper(PropertiesObserver, FieldWrapper[_T], abc.ABC):
     pass
 
 
-class CompositeField(typing.Generic[T]):
+class CompositeField(typing.Generic[_T]):
     def __init__(
         self,
-        source: typing.Callable[[], T],
-        setter: typing.Callable[[T], None],
-        default: T,
+        source: typing.Callable[[], _T],
+        setter: typing.Callable[[_T], None],
+        default: _T,
     ):
         self._source = source
         self._setter = setter
         self._default = default
 
     @property
-    def default(self) -> T:
+    def default(self) -> _T:
         return self._default
 
     @property
-    def raw(self) -> T:
+    def raw(self) -> _T:
         return self._source()
 
     @raw.setter
-    def raw(self, value: T):
+    def raw(self, value: _T):
         self._setter(value)
 
     @raw.deleter
@@ -186,27 +137,27 @@ class CompositeField(typing.Generic[T]):
         del self.raw
 
 
-E = typing.TypeVar('E', bound=ObservableWrapper)
+_E = typing.TypeVar('_E', bound=ObservableWrapper)
 
 
-class CompositeWrappedField(CompositeField[T], typing.Generic[T, E]):
+class CompositeWrappedField(CompositeField[_T], typing.Generic[_T, _E]):
     def __init__(
         self,
-        wrapper: typing.Type[E],
-        source: typing.Callable[[], T],
-        setter: typing.Callable[[T], None],
-        default: T,
+        wrapper: typing.Type[_E],
+        source: typing.Callable[[], _T],
+        setter: typing.Callable[[_T], None],
+        default: _T,
     ):
         super().__init__(source, setter, default)
-        self._wrapper: typing.Callable[[T], E] = wrapper.wrap
+        self._wrapper: typing.Callable[[_T], _E] = wrapper.wrap
         self._default_wrapped = self._wrapper(default)
 
     @property
-    def default(self) -> E:  # type: ignore
+    def default(self) -> _E:  # type: ignore
         return self._default_wrapped
 
     @property
-    def value(self) -> E:
+    def value(self) -> _E:
         value = self._wrapper(self._source())
         value.subscribe(lambda: self._setter(value.raw))
         return value

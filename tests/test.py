@@ -1,11 +1,12 @@
 import threading
+import time
 import unittest
 from contextlib import suppress
 from itertools import cycle
+
 import win_magnification as mag
 import win_magnification.old as old_mag
 from example import windows_utils  # type: ignore
-import time
 
 # Change to see visual changes on test running
 ALLOW_SLEEP = False  # TODO: Don't forget reset to False
@@ -43,8 +44,8 @@ class NoControlWindowTest(unittest.TestCase):
         return self.api.fullscreen
 
     def test_set_fullscreen_color_effect(self):
-        self.magnifier.color_effect.raw = mag.COLOR_INVERSION_EFFECT
-        self.assertEqual(self.magnifier.color_effect.raw, mag.COLOR_INVERSION_EFFECT)
+        self.magnifier.color_effect.raw = mag.const.COLOR_INVERSION_EFFECT
+        self.assertEqual(self.magnifier.color_effect.raw, mag.const.COLOR_INVERSION_EFFECT)
         delay_for_visualize(1)
         self.magnifier.color_effect.reset()
         self.assertEqual(
@@ -119,9 +120,9 @@ class NoControlWindowTest(unittest.TestCase):
 
     def test_gradation(self):
         for i in range(100+1):
-            self.magnifier.color_effect.raw = mag.get_color_matrix_inversion(i/100.0)
+            self.magnifier.color_effect.raw = mag.tools.get_color_matrix_inversion(i/100.0)
             delay_for_visualize(0.01)
-        self.assertEqual(self.magnifier.color_effect.raw, mag.COLOR_INVERSION_EFFECT)
+        self.assertEqual(self.magnifier.color_effect.raw, mag.const.COLOR_INVERSION_EFFECT)
 
     def test_cursor(self):
         self.magnifier.cursor_visible = False
@@ -160,8 +161,8 @@ class NoControlWindowThreaded(unittest.TestCase):
             try:
                 mag_api = mag.WinMagnificationAPI()
                 color_effect = mag_api.fullscreen.color_effect
-                color_effect.raw = mag.COLOR_INVERSION_EFFECT
-                self.assertEqual(color_effect.raw, mag.COLOR_INVERSION_EFFECT)
+                color_effect.raw = mag.const.COLOR_INVERSION_EFFECT
+                self.assertEqual(color_effect.raw, mag.const.COLOR_INVERSION_EFFECT)
                 delay_for_visualize(0.1)
                 color_effect.reset()
                 self.assertEqual(
@@ -197,7 +198,7 @@ class MagnificationControlWindowTest(unittest.TestCase):
 
     def test_fullscreen_switch(self):
         state = cycle((True, False))
-        self.magnifier.color_effect.raw = mag.COLOR_INVERSION_EFFECT
+        self.magnifier.color_effect.raw = mag.const.COLOR_INVERSION_EFFECT
         for i in range(4):
             new_state = next(state)
             self.window.fullscreen_mode = new_state
@@ -208,7 +209,7 @@ class MagnificationControlWindowTest(unittest.TestCase):
         self.window.fullscreen_mode = True
         scale = 1.5
         self.magnifier.scale.value.same = scale
-        self.magnifier.color_effect.raw = mag.COLOR_INVERSION_EFFECT
+        self.magnifier.color_effect.raw = mag.const.COLOR_INVERSION_EFFECT
         self.assertEqual(self.magnifier.source.raw, self.window.current_rectangle)
         with self.magnifier.source.value.batch() as source:
             source.same = -1
@@ -228,7 +229,7 @@ class MagnificationControlWindowTest(unittest.TestCase):
         delay_for_visualize(1)
         self.magnifier.scale.reset()
         self.assertEqual(self.magnifier.scale.value, self.magnifier.scale.default)
-        self.assertEqual(self.magnifier.color_effect.raw, mag.COLOR_INVERSION_EFFECT)
+        self.assertEqual(self.magnifier.color_effect.raw, mag.const.COLOR_INVERSION_EFFECT)
         self.assertEqual(self.window.fullscreen_mode, False)
         delay_for_visualize(1)
         mag.set_transform(self.window.magnifier_hwnd, scale)
@@ -236,7 +237,7 @@ class MagnificationControlWindowTest(unittest.TestCase):
         delay_for_visualize(1)
         mag.set_transform(self.window.magnifier_hwnd, (scale, scale * 2))
         self.assertEqual(self.magnifier.scale.value.pair, (scale, 2*scale))
-        self.assertEqual(self.magnifier.color_effect.raw, mag.COLOR_INVERSION_EFFECT)
+        self.assertEqual(self.magnifier.color_effect.raw, mag.const.COLOR_INVERSION_EFFECT)
         self.magnifier.color_effect.reset()
         self.assertEqual(self.magnifier.color_effect.raw, self.magnifier.color_effect.default)
 
@@ -248,7 +249,7 @@ class MagnificationControlWindowTest(unittest.TestCase):
         self.assertEqual(self.magnifier.scale.raw, self.magnifier.scale.default.raw)
 
     def test_exclusion_filters(self):
-        self.magnifier.color_effect.raw = mag.COLOR_INVERSION_EFFECT
+        self.magnifier.color_effect.raw = mag.const.COLOR_INVERSION_EFFECT
         result_list = (1902036, 65552, 1)
         self.magnifier.filters.raw = result_list
         self.assertEqual(self.magnifier.filters.raw, result_list)
