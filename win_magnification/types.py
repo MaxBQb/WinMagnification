@@ -5,8 +5,9 @@ Author: MaxBQb
 Docs: https://docs.microsoft.com/en-us/windows/win32/api/_magapi/
 Header: https://pastebin.com/Lh82NjjM
 """
+import typing
 
-ColorMatrix = tuple[
+ColorMatrix = typing.Tuple[
     float, float, float, float, float,
     float, float, float, float, float,
     float, float, float, float, float,
@@ -30,16 +31,16 @@ r+=x   g+=x   b+=x   a+=x   1
 More info: https://docs.microsoft.com/en-us/windows/win32/gdiplus/-gdiplus-using-a-color-matrix-to-transform-a-single-color-use
 """
 
-TransformationMatrix = tuple[
+TransformationMatrix = typing.Tuple[
     float, float, float,
     float, float, float,
     float, float, float,
 ]
 
-FullscreenTransformRaw = tuple[float, tuple[int, int]]
-RectangleRaw = tuple[int, int, int, int]
+FullscreenTransformRaw = typing.Tuple[float, typing.Tuple[int, int]]
+RectangleRaw = typing.Tuple[int, int, int, int]
 """
 Tuple of ints: (left, top, right, bottom)
 """
 
-InputTransformRaw = tuple[bool, RectangleRaw, RectangleRaw]
+InputTransformRaw = typing.Tuple[bool, RectangleRaw, RectangleRaw]

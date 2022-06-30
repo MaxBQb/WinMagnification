@@ -68,7 +68,7 @@ def get_fullscreen_color_effect() -> types.ColorMatrix:
 
 @_utils.require_single_thread()
 @_utils.raise_win_errors
-def set_fullscreen_transform(scale: float, offset: tuple[int, int]) -> None:
+def set_fullscreen_transform(scale: float, offset: typing.Tuple[int, int]) -> None:
     """
     Changes the magnification settings for the full-screen magnifier.
 
@@ -199,7 +199,7 @@ def set_filters(root_hwnd: int, *hwnds: int, exclude=True) -> None:
     )
 
 
-def get_filters(hwnd: int) -> tuple[bool, tuple[int]]:
+def get_filters(hwnd: int) -> typing.Tuple[bool, typing.Tuple[int]]:
     """
     Retrieves the list of windows that are magnified or excluded from magnification.
 

@@ -11,7 +11,7 @@ class PropertiesObserver:
         self._ignored_changes = set()
         self._is_property = False
         self._observers = set()
-        self._locks: dict[str, threading.RLock] = dict()
+        self._locks: typing.Dict[str, threading.RLock] = dict()
         self._batching_changes = 0
         self._subscribe_initial()
 

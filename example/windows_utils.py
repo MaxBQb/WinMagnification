@@ -90,8 +90,8 @@ WinEventHandler = typing.Callable[['AbstractWindow'], None]
 class AbstractWindow(metaclass=abc.ABCMeta):
     window_class: int = 0
     window_class_name = "Py_MyAbstractWindowClass"
-    windows: weakref.WeakValueDictionary[int, 'AbstractWindow'] = weakref.WeakValueDictionary()
-    events: dict[int, typing.Callable[[int, int, int, int], None]] = dict()
+    windows: typing.Dict[int, 'AbstractWindow'] = weakref.WeakValueDictionary()
+    events: typing.Dict[int, typing.Callable[[int, int, int, int], None]] = dict()
     # noinspection SpellCheckingInspection
     hinst = win32api.GetModuleHandle()
 

@@ -7,26 +7,27 @@ Header: https://pastebin.com/Lh82NjjM
 """
 import contextlib
 import threading
-from ctypes import *
-from ctypes.wintypes import RECT
-from functools import wraps
-from typing import Callable, ParamSpec
+import ctypes
+import functools
+import typing
 
 from .types import RectangleRaw
 
-P = ParamSpec("P")
+P = [typing.Any]
+if typing.TYPE_CHECKING:
+    P = typing.ParamSpec("P")  # type: ignore
 
 _current_thread = None
 
 
 def handle_win_last_error(function_result: bool):
     if not function_result:
-        raise WinError()
+        raise ctypes.WinError()
 
 
-def raise_win_errors(win_function: Callable[P, bool]) -> Callable[P, None]:
-    @wraps(win_function)
-    def wrapper(*args: P.args, **kwargs: P.kwargs) -> None:
+def raise_win_errors(win_function: typing.Callable[P, bool]) -> typing.Callable[P, None]:
+    @functools.wraps(win_function)
+    def wrapper(*args: 'P.args', **kwargs: 'P.kwargs') -> None:
         handle_win_last_error(win_function(*args, **kwargs))
     return wrapper
 
@@ -37,15 +38,15 @@ def require_single_thread():
     yield
 
 
-def to_py_array(c_matrix: Array, content_type=float):
+def to_py_array(c_matrix: ctypes.Array, content_type=float):
     return tuple(map(content_type, c_matrix))
 
 
-def to_c_array(matrix: tuple, content_type=c_float):
+def to_c_array(matrix: tuple, content_type=ctypes.c_float):
     return (content_type * len(matrix))(*matrix)
 
 
-def to_py_rectangle(rectangle: RECT) -> RectangleRaw:
+def to_py_rectangle(rectangle: ctypes.wintypes.RECT) -> RectangleRaw:
     # noinspection PyTypeChecker
     return (  # type: ignore
         rectangle.left,

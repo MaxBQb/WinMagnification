@@ -9,7 +9,7 @@ from .types import *
 
 
 @dataclasses.dataclass
-class Offset(_utils.ObservableWrapper[tuple[int, int]]):
+class Offset(_utils.ObservableWrapper[typing.Tuple[int, int]]):
     x: int
     y: int
 
@@ -25,16 +25,16 @@ class Offset(_utils.ObservableWrapper[tuple[int, int]]):
         self.raw = value, value
 
     @property
-    def raw(self) -> tuple[int, int]:
+    def raw(self) -> typing.Tuple[int, int]:
         return self.x, self.y
 
     @raw.setter
-    def raw(self, value: tuple[int, int]):
+    def raw(self, value: typing.Tuple[int, int]):
         with self.batch():
             self.x, self.y = value
 
     @classmethod
-    def wrap(cls, value: tuple[int, int]) -> 'Offset':
+    def wrap(cls, value: typing.Tuple[int, int]) -> 'Offset':
         return cls(*value)
 
 
@@ -53,7 +53,7 @@ class Rectangle(_utils.ObservableWrapper[RectangleRaw]):
         return self.left, self.top
 
     @start.setter
-    def start(self, value: tuple[int, int]):
+    def start(self, value: typing.Tuple[int, int]):
         with self.batch():
             self.left, self.top = value
 
@@ -70,7 +70,7 @@ class Rectangle(_utils.ObservableWrapper[RectangleRaw]):
         return self.right, self.bottom
 
     @end.setter
-    def end(self, value: tuple[int, int]):
+    def end(self, value: typing.Tuple[int, int]):
         with self.batch():
             self.right, self.bottom = value
 
@@ -145,18 +145,18 @@ class WindowTransform(_utils.ObservableWrapper[TransformationMatrix]):
     y: float
     __x_pos = tools.pos_for_matrix(TRANSFORMATION_MATRIX_SIZE, 0, 0)
     __y_pos = tools.pos_for_matrix(TRANSFORMATION_MATRIX_SIZE, 1, 1)
-    _matrix: list[float] = None  # type: ignore
+    _matrix: typing.List[float] = None  # type: ignore
 
     def __post_init__(self):
         super().__init__()
         self._matrix = list(tools.get_transform_matrix(self.x, self.y))
 
     @property
-    def pair(self) -> tuple[float, float]:
+    def pair(self) -> typing.Tuple[float, float]:
         return self.x, self.y
 
     @pair.setter
-    def pair(self, value: tuple[float, float]):
+    def pair(self, value: typing.Tuple[float, float]):
         with self.batch():
             self.x, self.y = value
 

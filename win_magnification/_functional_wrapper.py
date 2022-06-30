@@ -37,7 +37,7 @@ def set_transform_advanced(hwnd: int, matrix: types.TransformationMatrix) -> Non
     _wrapper.set_transform(hwnd, matrix)
 
 
-def set_transform(hwnd: int, scale: typing.Union[float, tuple[float, float]]):  # type: ignore
+def set_transform(hwnd: int, scale: typing.Union[float, typing.Tuple[float, float]]):  # type: ignore
     """
     Sets the transformation matrix for a magnifier control.
 
