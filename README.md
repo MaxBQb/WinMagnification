@@ -1,4 +1,4 @@
-# WinMagnification
+# [WinMagnification](https://pypi.org/project/WinMagnification/)
 Python wrapper for [Windows Magnification API](https://docs.microsoft.com/en-us/windows/win32/api/_magapi/)
 
 Covered functions:
