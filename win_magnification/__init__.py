@@ -15,4 +15,5 @@ from ._wrapper import (
 from ._functional_wrapper import *
 from . import const
 from . import tools
+from . import effects
 from ._object_wrapper import WinMagnificationAPI

@@ -320,7 +320,8 @@ _DLL.MagGetWindowSource.restype = wintypes.BOOL
 _DLL.MagGetWindowSource.argtypes = (wintypes.HWND, ctypes.POINTER(wintypes.RECT))
 
 _DLL.MagSetWindowFilterList.restype = wintypes.BOOL
-_DLL.MagSetWindowFilterList.argtypes = (wintypes.HWND, wintypes.DWORD, ctypes.c_int, ctypes.POINTER(wintypes.HWND))
+_DLL.MagSetWindowFilterList.argtypes = (wintypes.HWND, wintypes.DWORD,
+                                        ctypes.c_int, ctypes.POINTER(wintypes.HWND))
 
 _DLL.MagGetWindowFilterList.restype = wintypes.BOOL
 _DLL.MagGetWindowFilterList.argtypes = (wintypes.HWND, ctypes.POINTER(wintypes.DWORD),
@@ -332,7 +333,9 @@ _DLL.MagGetInputTransform.argtypes = (ctypes.POINTER(wintypes.BOOL),
                                       ctypes.POINTER(wintypes.RECT))
 
 _DLL.MagSetInputTransform.restype = wintypes.BOOL
-_DLL.MagSetInputTransform.argtypes = (wintypes.BOOL, ctypes.POINTER(wintypes.RECT), ctypes.POINTER(wintypes.RECT))
+_DLL.MagSetInputTransform.argtypes = (wintypes.BOOL,
+                                      ctypes.POINTER(wintypes.RECT),
+                                      ctypes.POINTER(wintypes.RECT))
 
 _DLL.MagShowSystemCursor.restype = wintypes.BOOL
 _DLL.MagShowSystemCursor.argtypes = (wintypes.BOOL,)

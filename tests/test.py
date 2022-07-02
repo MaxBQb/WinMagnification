@@ -120,7 +120,7 @@ class NoControlWindowTest(unittest.TestCase):
 
     def test_gradation(self):
         for i in range(100+1):
-            self.magnifier.color_effect.raw = mag.tools.get_color_matrix_inversion(i/100.0)
+            self.magnifier.color_effect.raw = mag.effects.inversion(i / 100.0)
             delay_for_visualize(0.01)
         self.assertEqual(self.magnifier.color_effect.raw, mag.const.COLOR_INVERSION_EFFECT)
 
