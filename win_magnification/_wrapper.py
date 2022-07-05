@@ -7,6 +7,7 @@ Author: MaxBQb |
 from __future__ import annotations
 
 import ctypes
+import sys
 import typing
 from ctypes import wintypes
 
@@ -14,7 +15,11 @@ from win_magnification import _utils
 from win_magnification import const
 from win_magnification import types
 
-_DLL = ctypes.WinDLL('magnification.dll')
+if sys.platform == 'win32':
+    _DLL = ctypes.WinDLL('magnification.dll')
+else:
+    _DLL = None
+    print("Magnification API exists only for Windows!")
 
 # C Types
 # noinspection SpellCheckingInspection
@@ -62,7 +67,8 @@ def get_fullscreen_color_effect() -> types.ColorMatrix:
     """
     Retrieves the color transformation matrix associated with the full-screen magnifier.
 
-    :return: The color transformation matrix, or the identity matrix (:data:`.COLOR_NO_EFFECT`) if no color effect has been set.
+    :return: The color transformation matrix, or the identity matrix (:data:`.COLOR_NO_EFFECT`)
+        if no color effect has been set.
     :rtype: :data:`.ColorMatrix`
     """
     result = _utils.to_c_array((0,) * const.COLOR_MATRIX_SIZE)
@@ -292,58 +298,60 @@ def set_cursor_visibility(show_cursor: bool):
 
 
 # C-Function original names and signatures
-_DLL.MagInitialize.restype = wintypes.BOOL
-_DLL.MagUninitialize.restype = wintypes.BOOL
+if sys.platform == 'win32':
+    _DLL.MagInitialize.restype = wintypes.BOOL
+    _DLL.MagUninitialize.restype = wintypes.BOOL
 
-_DLL.MagGetFullscreenColorEffect.restype = wintypes.BOOL
-_DLL.MagGetFullscreenColorEffect.argtypes = (_PMAGCOLOREFFECT,)
+    _DLL.MagGetFullscreenColorEffect.restype = wintypes.BOOL
+    _DLL.MagGetFullscreenColorEffect.argtypes = (_PMAGCOLOREFFECT,)
 
-_DLL.MagSetFullscreenColorEffect.restype = wintypes.BOOL
-_DLL.MagSetFullscreenColorEffect.argtypes = (_PMAGCOLOREFFECT,)
+    _DLL.MagSetFullscreenColorEffect.restype = wintypes.BOOL
+    _DLL.MagSetFullscreenColorEffect.argtypes = (_PMAGCOLOREFFECT,)
 
-_DLL.MagSetFullscreenTransform.restype = wintypes.BOOL
-_DLL.MagSetFullscreenTransform.argtypes = (ctypes.c_float, ctypes.c_int, ctypes.c_int)
+    _DLL.MagSetFullscreenTransform.restype = wintypes.BOOL
+    _DLL.MagSetFullscreenTransform.argtypes = (ctypes.c_float, ctypes.c_int,
+                                               ctypes.c_int)
 
-_DLL.MagGetFullscreenTransform.restype = wintypes.BOOL
-_DLL.MagGetFullscreenTransform.argtypes = (ctypes.POINTER(ctypes.c_float),
-                                           ctypes.POINTER(ctypes.c_int),
-                                           ctypes.POINTER(ctypes.c_int))
+    _DLL.MagGetFullscreenTransform.restype = wintypes.BOOL
+    _DLL.MagGetFullscreenTransform.argtypes = (ctypes.POINTER(ctypes.c_float),
+                                               ctypes.POINTER(ctypes.c_int),
+                                               ctypes.POINTER(ctypes.c_int))
 
-_DLL.MagSetColorEffect.restype = wintypes.BOOL
-_DLL.MagSetColorEffect.argtypes = (wintypes.HWND, _PMAGCOLOREFFECT,)
+    _DLL.MagSetColorEffect.restype = wintypes.BOOL
+    _DLL.MagSetColorEffect.argtypes = (wintypes.HWND, _PMAGCOLOREFFECT,)
 
-_DLL.MagGetColorEffect.restype = wintypes.BOOL
-_DLL.MagGetColorEffect.argtypes = (wintypes.HWND, _PMAGCOLOREFFECT,)
+    _DLL.MagGetColorEffect.restype = wintypes.BOOL
+    _DLL.MagGetColorEffect.argtypes = (wintypes.HWND, _PMAGCOLOREFFECT,)
 
-_DLL.MagSetWindowTransform.restype = wintypes.BOOL
-_DLL.MagSetWindowTransform.argtypes = (wintypes.HWND, _PMAGTRANSFORM,)
+    _DLL.MagSetWindowTransform.restype = wintypes.BOOL
+    _DLL.MagSetWindowTransform.argtypes = (wintypes.HWND, _PMAGTRANSFORM,)
 
-_DLL.MagGetWindowTransform.restype = wintypes.BOOL
-_DLL.MagGetWindowTransform.argtypes = (wintypes.HWND, _PMAGTRANSFORM,)
+    _DLL.MagGetWindowTransform.restype = wintypes.BOOL
+    _DLL.MagGetWindowTransform.argtypes = (wintypes.HWND, _PMAGTRANSFORM,)
 
-_DLL.MagSetWindowSource.restype = wintypes.BOOL
-_DLL.MagSetWindowSource.argtypes = (wintypes.HWND, wintypes.RECT)
+    _DLL.MagSetWindowSource.restype = wintypes.BOOL
+    _DLL.MagSetWindowSource.argtypes = (wintypes.HWND, wintypes.RECT)
 
-_DLL.MagGetWindowSource.restype = wintypes.BOOL
-_DLL.MagGetWindowSource.argtypes = (wintypes.HWND, ctypes.POINTER(wintypes.RECT))
+    _DLL.MagGetWindowSource.restype = wintypes.BOOL
+    _DLL.MagGetWindowSource.argtypes = (wintypes.HWND, ctypes.POINTER(wintypes.RECT))
 
-_DLL.MagSetWindowFilterList.restype = wintypes.BOOL
-_DLL.MagSetWindowFilterList.argtypes = (wintypes.HWND, wintypes.DWORD,
-                                        ctypes.c_int, ctypes.POINTER(wintypes.HWND))
+    _DLL.MagSetWindowFilterList.restype = wintypes.BOOL
+    _DLL.MagSetWindowFilterList.argtypes = (wintypes.HWND, wintypes.DWORD,
+                                            ctypes.c_int, ctypes.POINTER(wintypes.HWND))
 
-_DLL.MagGetWindowFilterList.restype = wintypes.BOOL
-_DLL.MagGetWindowFilterList.argtypes = (wintypes.HWND, ctypes.POINTER(wintypes.DWORD),
-                                        ctypes.c_int, ctypes.POINTER(wintypes.HWND))
+    _DLL.MagGetWindowFilterList.restype = wintypes.BOOL
+    _DLL.MagGetWindowFilterList.argtypes = (wintypes.HWND, ctypes.POINTER(wintypes.DWORD),
+                                            ctypes.c_int, ctypes.POINTER(wintypes.HWND))
 
-_DLL.MagGetInputTransform.restype = wintypes.BOOL
-_DLL.MagGetInputTransform.argtypes = (ctypes.POINTER(wintypes.BOOL),
-                                      ctypes.POINTER(wintypes.RECT),
-                                      ctypes.POINTER(wintypes.RECT))
+    _DLL.MagGetInputTransform.restype = wintypes.BOOL
+    _DLL.MagGetInputTransform.argtypes = (ctypes.POINTER(wintypes.BOOL),
+                                          ctypes.POINTER(wintypes.RECT),
+                                          ctypes.POINTER(wintypes.RECT))
 
-_DLL.MagSetInputTransform.restype = wintypes.BOOL
-_DLL.MagSetInputTransform.argtypes = (wintypes.BOOL,
-                                      ctypes.POINTER(wintypes.RECT),
-                                      ctypes.POINTER(wintypes.RECT))
+    _DLL.MagSetInputTransform.restype = wintypes.BOOL
+    _DLL.MagSetInputTransform.argtypes = (wintypes.BOOL,
+                                          ctypes.POINTER(wintypes.RECT),
+                                          ctypes.POINTER(wintypes.RECT))
 
-_DLL.MagShowSystemCursor.restype = wintypes.BOOL
-_DLL.MagShowSystemCursor.argtypes = (wintypes.BOOL,)
+    _DLL.MagShowSystemCursor.restype = wintypes.BOOL
+    _DLL.MagShowSystemCursor.argtypes = (wintypes.BOOL,)
