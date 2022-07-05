@@ -1,20 +1,48 @@
 """
-Additional tools available for programmer
-
-Author: MaxBQb
+| Additional tools available for programmer
+| Author: MaxBQb
 """
+from __future__ import annotations
+
+import functools
 import itertools
 import math
 import typing
 
-from . import types
+from win_magnification import types
 
 
 def get_matrix_side(elements_count: int, dimension_count=2):
+    """
+    | Gets size of square matrix side
+    | Example: linear matrix 9x9:
+    | **elements_count** = 81
+    | **dimension_count** = 2
+
+    :param elements_count: Total count of elements in matrix
+    :param dimension_count: Array = 1, matrix = 2, cube = 3, etc.
+    :return: Matrix rows/columns count
+    """
     return int(math.pow(elements_count, 1.0/dimension_count))
 
 
 def pos_for_matrix(array_len: int, *coords: int) -> int:
+    """
+    | Get index of element in linear structure,
+      defined by it's coordinates.
+    | Example:
+    >>> array = (
+    ...   0, 0, 0,
+    ...   0, 1, 2,
+    ...   0, 0, 0,
+    ... )
+    >>> array[pos_for_matrix(len(array), 1, 2)]
+    2
+
+    :param array_len: Size fo linear structure
+    :param coords: Element coordinates
+    :return: Index in array
+    """
     row_len = get_matrix_side(array_len, len(coords))
     return sum(
         row_len ** i * pos for (i, pos) in enumerate(reversed(coords), 0)
@@ -22,15 +50,38 @@ def pos_for_matrix(array_len: int, *coords: int) -> int:
 
 
 def print_matrix(matrix: typing.Tuple):
+    """
+    | Prints matrix in pretty format
+    | Example:
+    >>> print_matrix((2,))
+    2
+    >>> print_matrix((1,2,3,4))
+    1    2
+    3    4
+
+    :param matrix: Array which sqrt(size) is natural number
+    """
     row_len = get_matrix_side(len(matrix))
     for i in range(row_len):
-        print(*(
+        print(' '.join((
             str(element).rjust(4, ' ')
             for element in matrix[i*row_len:(1+i)*row_len]
-        ))
+        )).strip())
 
 
 def get_transform_matrix(x=1.0, y=1.0) -> types.TransformationMatrix:
+    """
+    | Creates screen transformation matrix
+    | Example:
+    >>> print_matrix(get_transform_matrix(2.0, 8.0))
+    2.0  0.0  0.0
+    0.0  8.0  0.0
+    0.0  0.0  1.0
+
+    :param x: Horizontal magnification
+    :param y: Vertical magnification
+    :return: Screen transformation matrix
+    """
     return (
         x, 0.0, 0.0,
         0.0, y, 0.0,
@@ -43,7 +94,17 @@ def get_simple_color_matrix(
     add_red=0.0, add_green=0.0, add_blue=0.0, add_alpha=0.0,
 ) -> types.ColorMatrix:
     """
-    Creates simple color transformation matrix
+    | Creates simple color transformation matrix
+    | Example:
+    >>> print_matrix(get_simple_color_matrix(
+    ...     1.1, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0
+    ... ))
+    1.1  0.0  0.0  0.0  0.0
+    0.0  2.0  0.0  0.0  0.0
+    0.0  0.0  3.0  0.0  0.0
+    0.0  0.0  0.0  4.0  0.0
+    5.0  6.0  7.0  8.0  1.0
+
     :param mul_red: Red color multiplier
     :param mul_green: Green color multiplier
     :param mul_blue: Blue color multiplier
@@ -65,9 +126,29 @@ def get_simple_color_matrix(
 
 def get_transition(start: typing.Tuple, end: typing.Tuple):
     """
-    :param start: initial state (transit from)
-    :param end: final state (transit to)
-    :return: transition function from start to end matrix
+    | Make function which returns **start** moved towards **end**
+    | with scale of **value** (param of that function):
+    | **value** = 0 |=> **start**
+    | **value** = 1 |=> **end**
+    | 0 <= **value** <= 1 |=> **start** moved towards **end**
+    | **value** > 1 |=> **start** moved towards **end** out of **end** bound
+    | **value** < 0 |=> **end** moved towards **start** out of **start** bound
+    | Example:
+    >>> move = get_transition((0, 0, 0), (10, 10, 10))
+    >>> move(0)
+    (0, 0, 0)
+    >>> move(1)
+    (10, 10, 10)
+    >>> move(0.4)
+    (4.0, 4.0, 4.0)
+    >>> move(-0.4)
+    (-4.0, -4.0, -4.0)
+    >>> move(-1.4)
+    (-14.0, -14.0, -14.0)
+
+    :param start: Initial state (transit from)
+    :param end: Final state (transit to)
+    :return: Transition function from **start** to **end** matrix
     """
     diff = tuple(
         end[i] - start[i] for i in range(len(start))
@@ -75,9 +156,12 @@ def get_transition(start: typing.Tuple, end: typing.Tuple):
 
     def transit(value=1.0):
         """
-        :param value: scale of transition
-        normally stays between 0 and 1 to get transition effect
-        :return: start matrix moved towards end matrix with value scale
+        Make tuple start moved towards tuple end
+        with scale of value
+
+        :param value: Float scale of transition
+        normally stays between 0 (start) and 1 (end) to get transition effect
+        :return: Start matrix moved towards end matrix with value scale
         """
         return tuple(
             start[i] + diff[i] * value for i in range(len(start))
@@ -87,9 +171,19 @@ def get_transition(start: typing.Tuple, end: typing.Tuple):
 
 def combine_matrices(first: typing.Tuple, second: typing.Tuple):
     """
-    Multiplies matrices, can be used to combine color transformations
-    :param first: matrix A
-    :param second: matrix B
+    | Multiplies matrices, can be used to combine color transformations
+    | Example:
+    >>> A = (1, 2, 3, 4)
+    >>> B = (5, 6, 7, 8)
+    >>> combine_matrices(A, B)
+    (19, 22, 43, 50)
+    >>> combine_matrices(A, (1,))
+    Traceback (most recent call last):
+    ...
+    ValueError: Matrices must be the same size!
+
+    :param first: Matrix A
+    :param second: Matrix B
     :return: A*B
     """
     if len(first) != len(second):
@@ -104,7 +198,25 @@ def combine_matrices(first: typing.Tuple, second: typing.Tuple):
     )))
 
 
-def replace(fun):
-    def wrapper(_):
-        return fun
+def replace(func: typing.Callable) -> typing.Callable:
+    """
+    | Decorator, replaces one function with another (**func**)
+    | Example:
+    >>> def call():
+    ...     print("call")
+    ...
+    >>> @replace(call)
+    ... def talk():
+    ...     '''talk docs'''
+    ...     print("talk")
+    >>> talk()
+    call
+    >>> talk.__doc__
+    'talk docs'
+
+    :param func: Function which will replace any other
+    :return: Wrapper, that acts like **func**
+    """
+    def wrapper(inner_func: typing.Callable) -> typing.Callable:
+        return functools.wraps(inner_func)(func)
     return wrapper

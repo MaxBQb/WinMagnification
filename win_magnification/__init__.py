@@ -1,9 +1,15 @@
 """
-Author: MaxBQb
-Docs: https://docs.microsoft.com/en-us/windows/win32/api/_magapi/
-Header: https://pastebin.com/Lh82NjjM
+| WinMagnification Package: Python wrapper for Magnification API
+Author: MaxBQb |
+`Microsoft Docs <https://docs.microsoft.com/en-us/windows/win32/api/_magapi/>`_ |
+`Header <https://pastebin.com/Lh82NjjM>`_
 """
-from ._wrapper import (
+from win_magnification import const
+from win_magnification import effects
+from win_magnification import tools
+from win_magnification._functional_wrapper import *
+from win_magnification._object_wrapper import WinMagnificationAPI
+from win_magnification._wrapper import (
     get_fullscreen_color_effect, set_fullscreen_color_effect,
     set_fullscreen_transform, get_fullscreen_transform,
     get_color_effect, set_color_effect,
@@ -12,8 +18,3 @@ from ._wrapper import (
     get_input_transform, set_input_transform,
     set_cursor_visibility
 )
-from ._functional_wrapper import *
-from . import const
-from . import tools
-from . import effects
-from ._object_wrapper import WinMagnificationAPI

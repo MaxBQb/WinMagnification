@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import abc
 import contextlib
 import threading
@@ -7,6 +9,24 @@ _PropertiesObserverType = typing.TypeVar('_PropertiesObserverType', bound='Prope
 
 
 class PropertiesObserver:
+    """
+    | Usage example:
+    >>> class MyPropertiesObserver(PropertiesObserver):
+    ...     def __init__(self):
+    ...         self.property1 = 10
+    ...         self.property2 = 10
+    ...         super().__init__()
+    ...
+    >>> property_observer = MyPropertiesObserver()
+    >>> property_observer.subscribe(lambda *_: print('update'))
+    >>> with property_observer.batch() as value:
+    ...     value.property1 += 1
+    ...     value.property2 -= 1
+    update
+    >>> property_observer.property1 += 1; property_observer.property2 -= 1
+    update
+    update
+    """
     def __init__(self):
         self._ignored_changes = set()
         self._is_property = False
@@ -71,11 +91,8 @@ class PropertiesObserver:
     @contextlib.contextmanager
     def batch(self: _PropertiesObserverType):
         """
-        Use to apply changes at once
-
-        with property_observer.batch() as value:
-            value.property1 += 1
-            value.property2 -= 1
+        | Use to apply changes at once
+        | See example above (:class:`PropertiesObserver`)
         """
         self._batching_changes += 1
         try:

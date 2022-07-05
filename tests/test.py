@@ -1,3 +1,7 @@
+import doctest
+import glob
+import inspect
+import os
 import threading
 import time
 import unittest
@@ -15,6 +19,12 @@ ALLOW_SLEEP = False  # TODO: Don't forget reset to False
 def delay_for_visualize(secs: float, apply=ALLOW_SLEEP):
     if apply:
         time.sleep(secs)
+
+
+def load_tests(loader, tests, ignore):
+    for name, module in inspect.getmembers(mag, inspect.ismodule):
+        tests.addTests(doctest.DocTestSuite(module))
+    return tests
 
 
 # noinspection PyMethodMayBeStatic

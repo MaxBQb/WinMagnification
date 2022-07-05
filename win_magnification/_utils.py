@@ -1,17 +1,16 @@
 """
-Additional tools used primary in wrapper
-
-Author: MaxBQb
-Docs: https://docs.microsoft.com/en-us/windows/win32/api/_magapi/
-Header: https://pastebin.com/Lh82NjjM
+| Additional tools used primary in wrapper
+| Author: MaxBQb
 """
+from __future__ import annotations
+
 import contextlib
-import threading
 import ctypes
 import functools
+import threading
 import typing
 
-from .types import RectangleRaw
+from win_magnification.types import RectangleRaw
 
 P = [typing.Any]
 if typing.TYPE_CHECKING:

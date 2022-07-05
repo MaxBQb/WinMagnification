@@ -1,11 +1,13 @@
+from __future__ import annotations
+
 import dataclasses
 
-from . import _object_utils as _utils
-from ._wrapper import *
-from ._functional_wrapper import *  # type: ignore
-from .const import *
-from . import tools
-from .types import *
+from win_magnification import _object_utils as _utils
+from win_magnification import tools
+from win_magnification._functional_wrapper import *  # type: ignore
+from win_magnification._wrapper import *
+from win_magnification.const import *
+from win_magnification.types import *
 
 
 @dataclasses.dataclass
@@ -278,6 +280,12 @@ class CustomWindowController:
 
 
 class WinMagnificationAPI:
+    """
+    Object-Oriented wrapper for Magnification API
+
+    .. automethod:: __del__
+    """
+
     def __init__(self):
         self.__disposed = False
         self.__fullscreen = FullscreenController()
@@ -286,10 +294,12 @@ class WinMagnificationAPI:
 
     @property
     def fullscreen(self):
+        """Gives access to fullscreen functions of Magnification API"""
         return self.__fullscreen
 
     @property
     def window(self):
+        """Gives access to window (custom magnifier controller) functions of Magnification API"""
         return self.__window
 
     def dispose(self):
@@ -303,4 +313,7 @@ class WinMagnificationAPI:
         finalize()
 
     def __del__(self):
+        """
+        Calls :meth:`.WinMagnificationAPI.dispose` on object distraction
+        """
         self.dispose()

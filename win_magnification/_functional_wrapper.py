@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import typing
 
-from . import _utils, _wrapper
-from . import const
-from . import types
-from . import tools
+from win_magnification import _utils, _wrapper
+from win_magnification import const
+from win_magnification import tools
+from win_magnification import types
 
 
 @_utils.require_single_thread()  # type: ignore
@@ -33,6 +35,7 @@ def set_transform_advanced(hwnd: int, matrix: types.TransformationMatrix) -> Non
 
     :param hwnd: The handle of the magnification window.
     :param matrix: A 3x3 matrix of the magnification transformation
+    :type matrix: :data:`.TransformationMatrix`
     """
     _wrapper.set_transform(hwnd, matrix)
 

@@ -291,3 +291,4 @@ $RECYCLE.BIN/
 
 # End of https://www.toptal.com/developers/gitignore/api/python,venv,pycharm+all,windows
 /.pycrunch-config.yaml
+/docs/source/_autosummary/
