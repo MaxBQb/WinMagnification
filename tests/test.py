@@ -192,13 +192,12 @@ class NoControlWindowThreaded(unittest.TestCase):
 class MagnificationControlWindowTest(unittest.TestCase):
     def setUp(self):
         self.window = windows_utils.MagnifierWindow()
-        self.window_thread = windows_utils.run_magnifier_window(self.window)
+        self.window.run()
 
     def tearDown(self):
         self.window.close()
-        self.window_thread.join()
+        self.window.wait_window_stop()
         self.window = None
-        self.window_thread = None
 
     @property
     def magnifier(self):

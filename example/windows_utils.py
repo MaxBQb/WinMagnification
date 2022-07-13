@@ -96,7 +96,8 @@ class AbstractWindow(metaclass=abc.ABCMeta):
     hinst = win32api.GetModuleHandle()
 
     def __init__(self):
-        self._thread: typing.Optional[int] = None
+        self._thread: typing.Optional[threading.Thread] = None
+        self._thread_id: typing.Optional[int] = None
         self._window_started_event = threading.Event()
         self._command = queue.Queue()
         self._result = queue.Queue()
@@ -125,7 +126,7 @@ class AbstractWindow(metaclass=abc.ABCMeta):
     def create_window(self):
         if self.is_alive:
             raise RuntimeError("Magnification window is already running")
-        self._thread = win32api.GetCurrentThreadId()
+        self._thread_id = win32api.GetCurrentThreadId()
         # Note: Without Dpi setting magnifier image quality is low and creepy
         ctypes.windll.shcore.SetProcessDpiAwareness(2)
         self._register_window_class()
@@ -204,8 +205,11 @@ class BasicWindow(AbstractWindow, abc.ABC):
     def _on_destroy(self):
         self._close()
 
-    def wait_window_start(self, timeout=None):
+    def wait_window_start(self, timeout: float = None):
         self._window_started_event.wait(timeout)
+
+    def wait_window_stop(self, timeout: float = None):
+        self._thread.join(timeout)
 
     @property
     def fullscreen_mode(self):
@@ -222,7 +226,7 @@ class BasicWindow(AbstractWindow, abc.ABC):
                 self._execute(make_partial_screen, self.hwnd, self.rectangle)
 
     def _execute(self, command: typing.Callable, *args, **kwargs):
-        if self._thread == win32api.GetCurrentThreadId():
+        if self._thread_id == win32api.GetCurrentThreadId():
             return command(*args, **kwargs)
         else:
             element = (command, args, kwargs)
@@ -235,6 +239,20 @@ class BasicWindow(AbstractWindow, abc.ABC):
         command, args, kwargs = self._command.get()
         result = command(*args, **kwargs)
         self._result.put(result)
+
+    def run(self):
+        def inner():
+            win32gui.InitCommonControls()
+            self.create_window()
+            win32gui.PumpMessages()
+            self._after_close()
+
+        self._thread = threading.Thread(target=inner)
+        self._thread.start()
+        self.wait_window_start()
+
+    def _after_close(self):
+        pass
 
 
 class MagnifierWindow(BasicWindow):
@@ -290,7 +308,7 @@ class MagnifierWindow(BasicWindow):
         super()._close()
         self.magnifier_hwnd = None
 
-    def after_close(self):
+    def _after_close(self):
         """Call this method after PumpMessages"""
         self.__magnifier.dispose()
 
@@ -330,16 +348,3 @@ class MagnifierWindow(BasicWindow):
             win32con.SWP_NOMOVE |
             win32con.SWP_NOSIZE
         )
-
-
-def run_magnifier_window(window: MagnifierWindow) -> threading.Thread:
-    def inner():
-        win32gui.InitCommonControls()
-        window.create_window()
-        win32gui.PumpMessages()
-        window.after_close()
-
-    thread = threading.Thread(target=inner)
-    thread.start()
-    window.wait_window_start()
-    return thread
