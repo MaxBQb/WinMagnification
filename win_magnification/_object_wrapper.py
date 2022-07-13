@@ -3,7 +3,6 @@ from __future__ import annotations
 import dataclasses
 
 from win_magnification import _object_utils as _utils
-from win_magnification import tools
 from win_magnification._functional_wrapper import *  # type: ignore
 from win_magnification._wrapper import *
 from win_magnification.const import *

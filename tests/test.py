@@ -1,7 +1,5 @@
 import doctest
-import glob
 import inspect
-import os
 import threading
 import time
 import unittest
