@@ -22,6 +22,7 @@ classifiers = [
 [project.urls]
 "Homepage" = "https://github.com/MaxBQb/WinMagnification"
 "Bug Tracker" = "https://github.com/MaxBQb/WinMagnification/issues"
+"Documentation" = "https://winmagnification.readthedocs.io/en/latest/",
 
 [build-system]
 requires = ["setuptools>=61.0"]

@@ -1,4 +1,10 @@
-# [WinMagnification](https://pypi.org/project/WinMagnification/)
+# WinMagnification
+[![Windows](https://svgshare.com/i/ZhY.svg)](https://svgshare.com/i/ZhY.svg)
+[![PyPI version shields.io](https://img.shields.io/pypi/v/WinMagnification.svg)](https://pypi.org/project/WinMagnification/)
+[![Documentation Status](https://readthedocs.org/projects/winmagnification/badge/?version=latest)](https://winmagnification.readthedocs.io/en/latest/)
+[![GitHub license](https://img.shields.io/github/license/MaxBQb/WinMagnification.svg)](https://github.com/MaxBQb/WinMagnification/blob/master/LICENSE.md)
+---
+
 Python wrapper for [Windows Magnification API](https://docs.microsoft.com/en-us/windows/win32/api/_magapi/)
 
 ```cmd
