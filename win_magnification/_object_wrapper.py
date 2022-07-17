@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import dataclasses
-
 from win_magnification import _object_utils as _utils
 from win_magnification._functional_wrapper import *  # type: ignore
 from win_magnification._wrapper import *
@@ -23,11 +21,11 @@ class Offset(_utils.CompositeWrappedField[typing.Tuple[int, int]]):
         self.raw = value, value
 
     @property
-    def _local_raw(self):
+    def _raw(self):
         return self.x, self.y
 
-    @_local_raw.setter
-    def _local_raw(self, value):
+    @_raw.setter
+    def _raw(self, value):
         self.x, self.y = value
 
 
@@ -39,11 +37,11 @@ class Rectangle(_utils.CompositeWrappedField[RectangleRaw]):
         self.bottom = 0
 
     @property
-    def _local_raw(self):
+    def _raw(self):
         return self.left, self.top, self.right, self.bottom
 
-    @_local_raw.setter
-    def _local_raw(self, value):
+    @_raw.setter
+    def _raw(self, value):
         self.left, self.top, self.right, self.bottom = value
 
     @property
@@ -95,11 +93,11 @@ class FullscreenTransform(_utils.CompositeWrappedField[FullscreenTransformRaw]):
         self.offset = Offset(default=DEFAULT_FULLSCREEN_TRANSFORM[1])
 
     @property
-    def _local_raw(self):
+    def _raw(self):
         return self.scale, self.offset.raw
 
-    @_local_raw.setter
-    def _local_raw(self, value):
+    @_raw.setter
+    def _raw(self, value):
         self.scale, self.offset.raw = value
 
 
@@ -110,11 +108,11 @@ class InputTransform(_utils.CompositeWrappedField[InputTransformRaw]):
         self.destination = Rectangle(default=ZERO_RECT)
 
     @property
-    def _local_raw(self):
+    def _raw(self):
         return self.enabled, self.source.raw, self.destination.raw
 
-    @_local_raw.setter
-    def _local_raw(self, value):
+    @_raw.setter
+    def _raw(self, value):
         self.enabled, self.source.raw, self.destination.raw = value
 
 
@@ -148,11 +146,11 @@ class WindowTransform(_utils.CompositeWrappedField[TransformationMatrix]):
         self.pair = value, value
 
     @property
-    def _local_raw(self):
+    def _raw(self):
         return tools.get_transform_matrix(self.x, self.y)
 
-    @_local_raw.setter
-    def _local_raw(self, value):
+    @_raw.setter
+    def _raw(self, value):
         self.pair = value[self.__x_pos], value[self.__y_pos]
 
 
@@ -160,18 +158,24 @@ class FullscreenController:
     def __init__(self):
         self._cursor_visible = True
         self._transform = FullscreenTransform(
-            get_fullscreen_transform,
-            lambda value: set_fullscreen_transform(*value),
+            _utils.DataSource.dynamic(
+                get_fullscreen_transform,
+                lambda value: set_fullscreen_transform(*value),
+            ),
             DEFAULT_FULLSCREEN_TRANSFORM
         )
         self._color_effect = _utils.CompositeField(
-            get_fullscreen_color_effect,
-            set_fullscreen_color_effect,
+            _utils.DataSource.dynamic(
+                get_fullscreen_color_effect,
+                set_fullscreen_color_effect,
+            ),
             DEFAULT_COLOR_EFFECT,
         )
         self._input_transform_transform = InputTransform(
-            get_input_transform,
-            lambda value: set_input_transform(*value),
+            _utils.DataSource.dynamic(
+                get_input_transform,
+                lambda value: set_input_transform(*value),
+            ),
             DEFAULT_INPUT_TRANSFORM
         )
 
@@ -202,26 +206,34 @@ class CustomWindowController:
     def __init__(self):
         self.hwnd = 0
         self._scale = WindowTransform(
-            lambda: get_transform(self.hwnd),
-            lambda result: set_transform_advanced(
-                self.hwnd,
-                result
+            _utils.DataSource.dynamic(
+                lambda: get_transform(self.hwnd),
+                lambda result: set_transform_advanced(
+                    self.hwnd,
+                    result
+                ),
             ),
             DEFAULT_TRANSFORM,
         )
         self._color_effect = _utils.CompositeField(
-            lambda: get_color_effect(self.hwnd),
-            lambda value: set_color_effect(self.hwnd, value),
+            _utils.DataSource.dynamic(
+                lambda: get_color_effect(self.hwnd),
+                lambda value: set_color_effect(self.hwnd, value),
+            ),
             DEFAULT_COLOR_EFFECT,
         )
         self._source = Rectangle(
-            lambda: get_source(self.hwnd),
-            lambda value: set_source(self.hwnd, value),
+            _utils.DataSource.dynamic(
+                lambda: get_source(self.hwnd),
+                lambda value: set_source(self.hwnd, value),
+            ),
             DEFAULT_SOURCE,
         )
         self._filters = _utils.CompositeField(
-            lambda: get_filters(self.hwnd)[1],
-            lambda value: set_filters(self.hwnd, *value),
+            _utils.DataSource.dynamic(
+                lambda: get_filters(self.hwnd)[1],
+                lambda value: set_filters(self.hwnd, *value),
+            ),
             DEFAULT_FILTERS_LIST,
         )
 

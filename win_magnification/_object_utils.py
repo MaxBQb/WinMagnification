@@ -129,15 +129,81 @@ class PropertiesObserver:
 _T = typing.TypeVar('_T')
 
 
+class DataSource(typing.Generic[_T]):
+    def __init__(self):
+        self.use_cache = False
+        self._has_cache = False
+        self._cache: _T = None
+
+    def source(self) -> _T:
+        pass
+
+    def setter(self, value: _T) -> None:
+        pass
+
+    @property
+    def has_cache(self):
+        return self._has_cache and self.use_cache
+
+    @property
+    def data(self):
+        if self.use_cache:
+            if not self._has_cache:
+                self._cache = self.source()
+                self._has_cache = True
+            return self._cache
+        return self.source()
+
+    @data.setter
+    def data(self, value):
+        self._has_cache = False
+        self.setter(value)
+
+    @classmethod
+    def dynamic(
+        cls,
+        source: typing.Callable[[], _T],
+        setter: typing.Callable[[_T], None],
+    ):
+        result = cls()
+        result.source = source
+        result.setter = setter
+        return result
+
+    @classmethod
+    def static(
+        cls,
+        value: _T,
+    ):
+        _state = [value]
+
+        def setter(x: _T):
+            _state[0] = x
+
+        result = cls.dynamic(
+            lambda: _state[0],
+            setter,
+        )
+        return result
+
+    @classmethod
+    def const(
+        cls,
+        value: _T,
+    ):
+        return cls.dynamic(
+            lambda: value,
+            lambda: None,
+        )
+
+
 class CompositeField(typing.Generic[_T]):
     def __init__(
-            self,
-            source: typing.Callable[[], _T],
-            setter: typing.Callable[[_T], None],
-            default: _T,
+        self,
+        datasource: DataSource[_T],
+        default: _T,
     ):
-        self._source = source
-        self._setter = setter
+        self._datasource = datasource
         self._default = default
 
     def __eq__(self, other):
@@ -151,11 +217,11 @@ class CompositeField(typing.Generic[_T]):
 
     @property
     def raw(self) -> _T:
-        return self._source()
+        return self._datasource.data
 
     @raw.setter
     def raw(self, value: _T):
-        self._setter(value)
+        self._datasource.data = value
 
     @raw.deleter
     def raw(self):
@@ -170,34 +236,32 @@ _C = typing.TypeVar('_C', bound='CompositeWrappedField')
 
 class CompositeWrappedField(CompositeField[_T], PropertiesObserver, typing.Generic[_T]):
     def __init__(
-            self,
-            source: typing.Optional[typing.Callable[[], _T]] = None,
-            setter: typing.Optional[typing.Callable[[_T], None]] = None,
-            default: typing.Optional[_T] = None
+        self,
+        datasource: typing.Optional[DataSource[_T]] = None,
+        default: typing.Optional[_T] = None
     ):
 
         def set_value(x: _T):
-            self._local_raw = x
+            self._raw = x
 
         CompositeField.__init__(
             self,
-            source or (lambda: self._local_raw),
-            setter or set_value,
+            datasource or DataSource.dynamic(
+                lambda: self._raw,
+                set_value,
+            ),
             default
         )
         PropertiesObserver.__init__(self)
-        self._is_cached = False
-        self._raw: typing.Optional[_T] = None
         if default is not None:
             self._default_wrapped: _C = self.__class__(
-                source=lambda: default,
-                setter=lambda x: None,
+                DataSource.const(default),
                 default=None,
             )
 
             def set_raw():
                 with self._ignore_all_changes():
-                    self._setter(self._local_raw)
+                    self.raw = self._raw
 
             self.subscribe(set_raw)
         else:
@@ -209,16 +273,17 @@ class CompositeWrappedField(CompositeField[_T], PropertiesObserver, typing.Gener
         self._subscribe_initial()
 
     def __getattribute__(self, item):
-        if item not in {
-            '_source_dependent',
-            '_all_changes_ignored',
-        } and not getattr(self, '_all_changes_ignored', False) \
-                and item in getattr(self, '_source_dependent', {}):
+        if item != '_source_dependent' and \
+           item != '_all_changes_ignored' and \
+           hasattr(self, '_source_dependent') and \
+           not getattr(self, '_all_changes_ignored', False) and \
+           item in getattr(self, '_source_dependent'):
             self._read_all()
         return super().__getattribute__(item)
 
     def __setattr__(self, key, value):
-        if key in getattr(self, '_source_dependent', {}):
+        if hasattr(self, '_source_dependent') and \
+           key in getattr(self, '_source_dependent'):
             if not self._all_changes_ignored:
                 self._read_all()
             if isinstance(value, CompositeWrappedField):
@@ -241,38 +306,28 @@ class CompositeWrappedField(CompositeField[_T], PropertiesObserver, typing.Gener
 
     @property
     @abc.abstractmethod
-    def _local_raw(self) -> _T:
+    def _raw(self) -> _T:
         pass
 
-    @_local_raw.setter
+    @_raw.setter
     @abc.abstractmethod
-    def _local_raw(self, value: _T):
+    def _raw(self, value: _T):
         pass
 
     def _read_all(self):
-        if not self._cache_used:
+        if not self._datasource.has_cache:
             with self._ignore_all_changes():
-                self._local_raw = self.raw
+                self._raw = self.raw
 
-    @property
-    def _cache_used(self):
-        return self._is_cached and self._batching_changes != 0
-
-    @property
-    def raw(self) -> _T:
-        if not self._cache_used:
-            self._is_cached = self._batching_changes != 0
-            self._raw = self._source()
-        return self._raw  # type: ignore
-
-    @raw.setter
-    def raw(self, value: _T):
-        self._setter(value)
-        self._is_cached = False
-
-    @raw.deleter
-    def raw(self):
-        self.raw = self._default
+    @contextlib.contextmanager
+    def batch(self: _C):
+        self._datasource.use_cache = True
+        try:
+            with super().batch():
+                yield self
+        finally:
+            if not self._batching_changes:
+                self._datasource.use_cache = False
 
     @property
     def default(self: _C) -> _C:  # type: ignore
