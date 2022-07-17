@@ -8,9 +8,14 @@ from win_magnification.types import *
 
 
 class Offset(_utils.CompositeWrappedField[typing.Tuple[int, int]]):
-    def _define_observable(self):
+    def __init__(
+        self,
+        datasource: typing.Optional[_utils.DataSource[typing.Tuple[int, int]]] = None,
+        default: typing.Optional[typing.Tuple[int, int]] = None
+    ):
         self.x: int = 0
         self.y: int = 0
+        super().__init__(datasource, default)
 
     @property
     def same(self) -> int:
@@ -30,11 +35,16 @@ class Offset(_utils.CompositeWrappedField[typing.Tuple[int, int]]):
 
 
 class Rectangle(_utils.CompositeWrappedField[RectangleRaw]):
-    def _define_observable(self):
-        self.left = 0
-        self.top = 0
-        self.right = 0
-        self.bottom = 0
+    def __init__(
+        self,
+        datasource: typing.Optional[_utils.DataSource[RectangleRaw]] = None,
+        default: typing.Optional[RectangleRaw] = None
+    ):
+        self.left: int = 0
+        self.top: int = 0
+        self.right: int = 0
+        self.bottom: int = 0
+        super().__init__(datasource, default)
 
     @property
     def _raw(self):
@@ -88,9 +98,14 @@ class Rectangle(_utils.CompositeWrappedField[RectangleRaw]):
 
 
 class FullscreenTransform(_utils.CompositeWrappedField[FullscreenTransformRaw]):
-    def _define_observable(self):
+    def __init__(
+        self,
+        datasource: typing.Optional[_utils.DataSource[FullscreenTransformRaw]] = None,
+        default: typing.Optional[FullscreenTransformRaw] = None
+    ):
         self.scale: float = 0.0
         self.offset = Offset(default=DEFAULT_FULLSCREEN_TRANSFORM[1])
+        super().__init__(datasource, default)
 
     @property
     def _raw(self):
@@ -102,10 +117,15 @@ class FullscreenTransform(_utils.CompositeWrappedField[FullscreenTransformRaw]):
 
 
 class InputTransform(_utils.CompositeWrappedField[InputTransformRaw]):
-    def _define_observable(self):
+    def __init__(
+            self,
+            datasource: typing.Optional[_utils.DataSource[InputTransformRaw]] = None,
+            default: typing.Optional[InputTransformRaw] = None
+    ):
         self.enabled: bool = False
         self.source = Rectangle(default=ZERO_RECT)
         self.destination = Rectangle(default=ZERO_RECT)
+        super().__init__(datasource, default)
 
     @property
     def _raw(self):
@@ -120,13 +140,14 @@ class WindowTransform(_utils.CompositeWrappedField[TransformationMatrix]):
     __x_pos = tools.pos_for_matrix(TRANSFORMATION_MATRIX_SIZE, 0, 0)
     __y_pos = tools.pos_for_matrix(TRANSFORMATION_MATRIX_SIZE, 1, 1)
 
-    def _define_observable(self):
+    def __init__(
+        self,
+        datasource: typing.Optional[_utils.DataSource[TransformationMatrix]] = None,
+        default: typing.Optional[TransformationMatrix] = None
+    ):
         self.x: float = 0.0
         self.y: float = 0.0
-
-    def __post_init__(self):
-        super().__init__()
-        self._matrix = list(tools.get_transform_matrix(self.x, self.y))
+        super().__init__(datasource, default)
 
     @property
     def pair(self) -> typing.Tuple[float, float]:

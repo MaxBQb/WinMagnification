@@ -41,9 +41,14 @@ class PropertiesObserver:
         self._subscribe_initial()
 
     def _subscribe_initial(self):
-        for name, value in vars(self).items():
-            if self.__is_property_observed(name):
-                self.__subscribe_property(name, value)
+        for name, value in self._properties_observed.items():
+            self.__subscribe_property(name, value)
+
+    @property
+    def _properties_observed(self):
+        return {
+            key: value for key, value in vars(self).items() if self.__is_property_observed(key)
+        }
 
     def __is_property_observed(self, name: str):
         if self._all_changes_ignored or name in self._ignored_changes:
@@ -266,11 +271,8 @@ class CompositeWrappedField(CompositeField[_T], PropertiesObserver, typing.Gener
             self.subscribe(set_raw)
         else:
             self._default_wrapped = None
-        temp = set(dir(self))
-        with self._ignore_all_changes():
-            self._define_observable()
-        self._source_dependent = set(dir(self)).difference(temp)
         self._subscribe_initial()
+        self._source_dependent = set(self._properties_observed)
 
     def __getattribute__(self, item):
         if item != '_source_dependent' and \
@@ -300,9 +302,6 @@ class CompositeWrappedField(CompositeField[_T], PropertiesObserver, typing.Gener
             setattr(self, item, getattr(self.default, item))
         else:
             return super().__delattr__(item)
-
-    def _define_observable(self):
-        pass
 
     @property
     @abc.abstractmethod

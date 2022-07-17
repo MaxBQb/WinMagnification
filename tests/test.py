@@ -19,6 +19,7 @@ def delay_for_visualize(secs: float, apply=ALLOW_SLEEP):
         time.sleep(secs)
 
 
+# noinspection PyUnusedLocal
 def load_tests(loader, tests, ignore):
     for name, module in inspect.getmembers(mag, inspect.ismodule):
         tests.addTests(doctest.DocTestSuite(module))

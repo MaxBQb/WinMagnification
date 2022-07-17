@@ -1,10 +1,10 @@
+import abc
 import ctypes
 import functools
-import weakref
 import queue
 import threading
-import abc
 import typing
+import weakref
 
 import timer  # type: ignore
 import win32api  # type: ignore
