@@ -37,7 +37,7 @@ class PropertiesObserver:
         self._observers = set()
         self._locks: typing.Dict[str, threading.RLock] = dict()
         self._has_changes = False
-        self._batching_changes = 0
+        self._batching_changes = False
         self._subscribe_initial()
 
     def _subscribe_initial(self):
@@ -73,6 +73,9 @@ class PropertiesObserver:
 
     @contextlib.contextmanager
     def _ignore_all_changes(self):
+        if self._all_changes_ignored:
+            yield
+            return
         self._all_changes_ignored = True
         try:
             yield
@@ -120,14 +123,16 @@ class PropertiesObserver:
         | Use to apply changes at once
         | See example above (:class:`PropertiesObserver`)
         """
-        if not self._batching_changes:
-            self._has_changes = False
-        self._batching_changes += 1
+        if self._batching_changes:
+            yield
+            return
+        self._has_changes = False
+        self._batching_changes = True
         try:
             yield self
         finally:
-            self._batching_changes -= 1
-            if not self._batching_changes and self._has_changes:
+            self._batching_changes = False
+            if self._has_changes:
                 self._on_change()
 
 
@@ -166,9 +171,9 @@ class DataSource(typing.Generic[_T]):
 
     @classmethod
     def dynamic(
-        cls,
-        source: typing.Callable[[], _T],
-        setter: typing.Callable[[_T], None],
+            cls,
+            source: typing.Callable[[], _T],
+            setter: typing.Callable[[_T], None],
     ):
         result = cls()
         result.source = source
@@ -177,8 +182,8 @@ class DataSource(typing.Generic[_T]):
 
     @classmethod
     def static(
-        cls,
-        value: _T,
+            cls,
+            value: _T,
     ):
         _state = [value]
 
@@ -193,8 +198,8 @@ class DataSource(typing.Generic[_T]):
 
     @classmethod
     def const(
-        cls,
-        value: _T,
+            cls,
+            value: _T,
     ):
         return cls.dynamic(
             lambda: value,
@@ -204,9 +209,9 @@ class DataSource(typing.Generic[_T]):
 
 class CompositeField(typing.Generic[_T]):
     def __init__(
-        self,
-        datasource: DataSource[_T],
-        default: _T,
+            self,
+            datasource: DataSource[_T],
+            default: _T,
     ):
         self._datasource = datasource
         self._default = default
@@ -241,9 +246,9 @@ _C = typing.TypeVar('_C', bound='CompositeWrappedField')
 
 class CompositeWrappedField(CompositeField[_T], PropertiesObserver, typing.Generic[_T]):
     def __init__(
-        self,
-        datasource: typing.Optional[DataSource[_T]] = None,
-        default: typing.Optional[_T] = None
+            self,
+            datasource: typing.Optional[DataSource[_T]] = None,
+            default: typing.Optional[_T] = None
     ):
 
         def set_value(x: _T):
@@ -276,16 +281,16 @@ class CompositeWrappedField(CompositeField[_T], PropertiesObserver, typing.Gener
 
     def __getattribute__(self, item):
         if item != '_source_dependent' and \
-           item != '_all_changes_ignored' and \
-           hasattr(self, '_source_dependent') and \
-           not getattr(self, '_all_changes_ignored', False) and \
-           item in getattr(self, '_source_dependent'):
+                item != '_all_changes_ignored' and \
+                hasattr(self, '_source_dependent') and \
+                not getattr(self, '_all_changes_ignored', True) and \
+                item in getattr(self, '_source_dependent'):
             self._read_all()
         return super().__getattribute__(item)
 
     def __setattr__(self, key, value):
         if hasattr(self, '_source_dependent') and \
-           key in getattr(self, '_source_dependent'):
+                key in getattr(self, '_source_dependent'):
             if not self._all_changes_ignored:
                 self._read_all()
             if isinstance(value, CompositeWrappedField):
@@ -320,13 +325,15 @@ class CompositeWrappedField(CompositeField[_T], PropertiesObserver, typing.Gener
 
     @contextlib.contextmanager
     def batch(self: _C):
+        if self._batching_changes:
+            yield
+            return
         self._datasource.use_cache = True
         try:
             with super().batch():
                 yield self
         finally:
-            if not self._batching_changes:
-                self._datasource.use_cache = False
+            self._datasource.use_cache = False
 
     @property
     def default(self: _C) -> _C:  # type: ignore
