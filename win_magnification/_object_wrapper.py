@@ -7,6 +7,34 @@ from win_magnification.const import *
 from win_magnification.types import *
 
 
+class Vector2(_utils.CompositeWrappedField[typing.Tuple[float, float]]):
+    def __init__(
+        self,
+        datasource: typing.Optional[_utils.DataSource[typing.Tuple[float, float]]] = None,
+        default: typing.Optional[typing.Tuple[float, float]] = None
+    ):
+        self.x: float = 0
+        self.y: float = 0
+        super().__init__(datasource, default)
+
+    @property
+    def same(self) -> float:
+        return self.x
+
+    @same.setter
+    def same(self, value: float):
+        with self.batch():
+            self._raw = value, value
+
+    @property
+    def _raw(self):
+        return self.x, self.y
+
+    @_raw.setter
+    def _raw(self, value):
+        self.x, self.y = value
+
+
 class Offset(_utils.CompositeWrappedField[typing.Tuple[int, int]]):
     def __init__(
         self,
@@ -23,7 +51,8 @@ class Offset(_utils.CompositeWrappedField[typing.Tuple[int, int]]):
 
     @same.setter
     def same(self, value: int):
-        self.raw = value, value
+        with self.batch():
+            self._raw = value, value
 
     @property
     def _raw(self):
@@ -94,7 +123,8 @@ class Rectangle(_utils.CompositeWrappedField[RectangleRaw]):
 
     @same.setter
     def same(self, value: int):
-        self.raw = value, value, value, value
+        with self.batch():
+            self._raw = value, value, value, value
 
 
 class FullscreenTransform(_utils.CompositeWrappedField[FullscreenTransformRaw]):
@@ -139,40 +169,32 @@ class InputTransform(_utils.CompositeWrappedField[InputTransformRaw]):
 class WindowTransform(_utils.CompositeWrappedField[TransformationMatrix]):
     __x_pos = tools.pos_for_matrix(TRANSFORMATION_MATRIX_SIZE, 0, 0)
     __y_pos = tools.pos_for_matrix(TRANSFORMATION_MATRIX_SIZE, 1, 1)
+    __x_offset_pos = tools.pos_for_matrix(TRANSFORMATION_MATRIX_SIZE, 0, 2)
+    __y_offset_pos = tools.pos_for_matrix(TRANSFORMATION_MATRIX_SIZE, 1, 2)
 
     def __init__(
         self,
         datasource: typing.Optional[_utils.DataSource[TransformationMatrix]] = None,
         default: typing.Optional[TransformationMatrix] = None
     ):
-        self.x: float = 0.0
-        self.y: float = 0.0
+        self.scale = Vector2(default=(
+            DEFAULT_TRANSFORM[self.__x_pos],
+            DEFAULT_TRANSFORM[self.__y_pos],
+        ))
+        self.offset = Vector2(default=(
+            DEFAULT_TRANSFORM[self.__x_offset_pos],
+            DEFAULT_TRANSFORM[self.__y_offset_pos],
+        ))
         super().__init__(datasource, default)
 
     @property
-    def pair(self) -> typing.Tuple[float, float]:
-        return self.x, self.y
-
-    @pair.setter
-    def pair(self, value: typing.Tuple[float, float]):
-        with self.batch():
-            self.x, self.y = value
-
-    @property
-    def same(self) -> float:
-        return self.x
-
-    @same.setter
-    def same(self, value: float):
-        self.pair = value, value
-
-    @property
     def _raw(self):
-        return tools.get_transform_matrix(self.x, self.y)
+        return tools.get_transform_matrix(*self.scale.raw, *self.offset.raw)
 
     @_raw.setter
     def _raw(self, value):
-        self.pair = value[self.__x_pos], value[self.__y_pos]
+        self.scale.raw = value[self.__x_pos], value[self.__y_pos]
+        self.offset.raw = -value[self.__x_offset_pos], -value[self.__y_offset_pos]
 
 
 class FullscreenController:
@@ -226,7 +248,7 @@ class FullscreenController:
 class CustomWindowController:
     def __init__(self):
         self.hwnd = 0
-        self._scale = WindowTransform(
+        self._transform = WindowTransform(
             _utils.DataSource.dynamic(
                 lambda: get_transform(self.hwnd),
                 lambda result: set_transform_advanced(
@@ -259,8 +281,8 @@ class CustomWindowController:
         )
 
     @property
-    def scale(self):
-        return self._scale
+    def transform(self):
+        return self._transform
 
     @property
     def color_effect(self):

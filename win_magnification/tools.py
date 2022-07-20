@@ -69,7 +69,7 @@ def print_matrix(matrix: typing.Tuple):
         )).strip())
 
 
-def get_transform_matrix(x=1.0, y=1.0) -> types.TransformationMatrix:
+def get_transform_matrix(x=1.0, y=1.0, offset_x=-0.0, offset_y=-0.0) -> types.TransformationMatrix:
     """
     | Creates screen transformation matrix
     | Example:
@@ -77,14 +77,20 @@ def get_transform_matrix(x=1.0, y=1.0) -> types.TransformationMatrix:
     2.0  0.0  0.0
     0.0  8.0  0.0
     0.0  0.0  1.0
+    >>> print_matrix(get_transform_matrix(3.0, 4.0, 5.0, 6.0))
+    3.0  0.0 -5.0
+    0.0  4.0 -6.0
+    0.0  0.0  1.0
 
     :param x: Horizontal magnification
     :param y: Vertical magnification
+    :param offset_x: Horizontal (<==) offset from left upper corner of window
+    :param offset_y: Vertical (^) offset from left upper corner of window
     :return: Screen transformation matrix
     """
     return (
-        x, 0.0, 0.0,
-        0.0, y, 0.0,
+        x,   0.0, -offset_x,
+        0.0, y,   -offset_y,
         0.0, 0.0, 1.0,
     )
 
@@ -116,10 +122,10 @@ def get_simple_color_matrix(
     :return: Color transformation matrix
     """
     return (
-        mul_red, 0.0, 0.0, 0.0, 0.0,
-        0.0, mul_green, 0.0, 0.0, 0.0,
-        0.0, 0.0, mul_blue, 0.0, 0.0,
-        0.0, 0.0, 0.0, mul_alpha, 0.0,
+        mul_red, 0.0,       0.0,      0.0,       0.0,
+        0.0,     mul_green, 0.0,      0.0,       0.0,
+        0.0,     0.0,       mul_blue, 0.0,       0.0,
+        0.0,     0.0,       0.0,      mul_alpha, 0.0,
         add_red, add_green, add_blue, add_alpha, 1.0,
     )
 

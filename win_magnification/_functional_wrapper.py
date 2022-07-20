@@ -40,15 +40,22 @@ def set_transform_advanced(hwnd: int, matrix: types.TransformationMatrix) -> Non
     _wrapper.set_transform(hwnd, matrix)
 
 
-def set_transform(hwnd: int, scale: typing.Union[float, typing.Tuple[float, float]]):  # type: ignore
+def set_transform(
+    hwnd: int,
+    scale: typing.Union[float, typing.Tuple[float, float]],
+    offset: typing.Union[float, typing.Tuple[float, float]] = 0.0,
+):  # type: ignore
     """
     Sets the transformation matrix for a magnifier control.
 
     :param hwnd: The handle of the magnification window.
     :param scale: Magnification factor, or it's separate x, y components
+    :param offset: Magnifier offset from left upper corner
     """
-    scale_x, scale_y = scale if isinstance(scale, tuple) else (scale, scale)
-    set_transform_advanced(hwnd, tools.get_transform_matrix(scale_x, scale_y))
+    set_transform_advanced(hwnd, tools.get_transform_matrix(
+        *(scale if isinstance(scale, tuple) else (scale, scale)),
+        *(offset if isinstance(offset, tuple) else (offset, offset))
+    ))
 
 
 def reset_fullscreen_color_effect():
