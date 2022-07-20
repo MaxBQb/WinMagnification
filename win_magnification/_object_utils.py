@@ -113,7 +113,8 @@ class PropertiesObserver:
     def _on_property_changed(self, name: str, value):
         self.__subscribe_property(name, value)
         if not self._batching_changes:
-            self._on_change()
+            if not self._all_changes_ignored:
+                self._on_change()
         else:
             self._has_changes = True
 
@@ -124,7 +125,7 @@ class PropertiesObserver:
         | See example above (:class:`PropertiesObserver`)
         """
         if self._batching_changes:
-            yield
+            yield self
             return
         self._has_changes = False
         self._batching_changes = True
@@ -252,12 +253,17 @@ class CompositeWrappedField(CompositeField[_T], PropertiesObserver, typing.Gener
     ):
 
         def set_value(x: _T):
-            self._raw = x
+            with self.batch():
+                self._raw = x
+
+        def get_value() -> _T:
+            with self._ignore_all_changes():
+                return self._raw
 
         CompositeField.__init__(
             self,
             datasource or DataSource.dynamic(
-                lambda: self._raw,
+                get_value,
                 set_value,
             ),
             default
@@ -326,14 +332,14 @@ class CompositeWrappedField(CompositeField[_T], PropertiesObserver, typing.Gener
     @contextlib.contextmanager
     def batch(self: _C):
         if self._batching_changes:
-            yield
+            yield self
             return
-        self._datasource.use_cache = True
-        try:
-            with super().batch():
+        with super().batch():
+            self._datasource.use_cache = True
+            try:
                 yield self
-        finally:
-            self._datasource.use_cache = False
+            finally:
+                self._datasource.use_cache = False
 
     @property
     def default(self: _C) -> _C:  # type: ignore
