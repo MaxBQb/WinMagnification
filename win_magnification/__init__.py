@@ -8,7 +8,7 @@ from win_magnification import const
 from win_magnification import effects
 from win_magnification import tools
 from win_magnification._functional_wrapper import *
-from win_magnification._object_wrapper import WinMagnificationAPI
+from win_magnification.objects import WinMagnificationAPI
 from win_magnification._wrapper import (
     get_fullscreen_color_effect, set_fullscreen_color_effect,
     set_fullscreen_transform, get_fullscreen_transform,
