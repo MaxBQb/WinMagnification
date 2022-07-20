@@ -13,7 +13,7 @@ from win_magnification._wrapper import (
     get_fullscreen_color_effect, set_fullscreen_color_effect,
     set_fullscreen_transform, get_fullscreen_transform,
     get_color_effect, set_color_effect,
-    get_transform, set_source, get_source,
+    set_source, get_source,
     set_filters, get_filters,
     get_input_transform, set_input_transform,
     set_cursor_visibility

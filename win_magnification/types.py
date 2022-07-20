@@ -49,6 +49,30 @@ TransformationMatrix: typing.TypeAlias = typing.Tuple[
 
 | **T** is Affine transformation
 | **N** is the magnification factor.
+| Note: it's not mentioned in `docs <https://docs.microsoft.com/en-us/windows/win32/api/magnification/ns-magnification-magtransform>`_, but I noticed this:
+
+=== === ===
+ X   Y   T
+=== === ===
+ N  0.0 -X
+0.0  N  -Y
+0.0 0.0 1.0
+=== === ===
+
+| **X** Offset from left to right
+| **Y** Offset from up to down
+| Where (0, 0) is upper-left corner of magnifier window
+"""
+
+SimpleTransformation: typing.TypeAlias = typing.Tuple[
+    typing.Tuple[float, float],
+    typing.Tuple[float, float],
+]
+"""
+| Tuple of (**scale**, **offset**)
+| **scale**: (x, y)
+| **offset**: (x, y)
+| **Offset** starts from upper-left corner of magnification window
 """
 
 FullscreenTransformRaw: typing.TypeAlias = typing.Tuple[float, typing.Tuple[int, int]]

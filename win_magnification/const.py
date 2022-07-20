@@ -5,6 +5,7 @@ Author: MaxBQb |
 `Header <https://pastebin.com/Lh82NjjM>`_
 """
 from win_magnification import tools
+from win_magnification import types
 
 # C Constants (feel free to use)
 WC_MAGNIFIER = "Magnifier"
@@ -181,6 +182,33 @@ Default transformation matrix which does nothing with magnification factor
 
 :type: :data:`.TransformationMatrix`
 """
+
+DEFAULT_TRANSFORM_EXTRACTION_PATTERN = tuple(tools.get_extraction_pattern(
+    TRANSFORMATION_MATRIX_SIZE,
+    (0, 0),
+    (1, 1),
+    (0, 2),
+    (1, 2)
+))
+"""
+Default transformation matrix extraction pattern
+Allows to extract (scale_x, scale_y, offset_x, offset_y)
+"""
+
+_DEFAULT_TRANSFORM_PAIR = tools.extract_from_matrix(
+    DEFAULT_TRANSFORM,
+    *DEFAULT_TRANSFORM_EXTRACTION_PATTERN,
+)
+DEFAULT_TRANSFORM_PAIR: types.SimpleTransformation \
+    = _DEFAULT_TRANSFORM_PAIR[:2], _DEFAULT_TRANSFORM_PAIR[2:]
+"""
+Default transformation which does nothing with magnification factor
+tuple of (scale, offset)
+
+:type: :data:`.SimpleTransformation`
+"""
+del _DEFAULT_TRANSFORM_PAIR
+
 DEFAULT_FULLSCREEN_TRANSFORM = (1.0, (0, 0))
 """
 Default fullscreen transformation which does nothing with magnification factor

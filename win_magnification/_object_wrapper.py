@@ -167,24 +167,13 @@ class InputTransform(_utils.CompositeWrappedField[InputTransformRaw]):
 
 
 class WindowTransform(_utils.CompositeWrappedField[TransformationMatrix]):
-    __x_pos = tools.pos_for_matrix(TRANSFORMATION_MATRIX_SIZE, 0, 0)
-    __y_pos = tools.pos_for_matrix(TRANSFORMATION_MATRIX_SIZE, 1, 1)
-    __x_offset_pos = tools.pos_for_matrix(TRANSFORMATION_MATRIX_SIZE, 0, 2)
-    __y_offset_pos = tools.pos_for_matrix(TRANSFORMATION_MATRIX_SIZE, 1, 2)
-
     def __init__(
         self,
         datasource: typing.Optional[_utils.DataSource[TransformationMatrix]] = None,
         default: typing.Optional[TransformationMatrix] = None
     ):
-        self.scale = Vector2(default=(
-            DEFAULT_TRANSFORM[self.__x_pos],
-            DEFAULT_TRANSFORM[self.__y_pos],
-        ))
-        self.offset = Vector2(default=(
-            DEFAULT_TRANSFORM[self.__x_offset_pos],
-            DEFAULT_TRANSFORM[self.__y_offset_pos],
-        ))
+        self.scale = Vector2(default=DEFAULT_TRANSFORM_PAIR[0])
+        self.offset = Vector2(default=DEFAULT_TRANSFORM_PAIR[1])
         super().__init__(datasource, default)
 
     @property
@@ -193,8 +182,17 @@ class WindowTransform(_utils.CompositeWrappedField[TransformationMatrix]):
 
     @_raw.setter
     def _raw(self, value):
-        self.scale.raw = value[self.__x_pos], value[self.__y_pos]
-        self.offset.raw = -value[self.__x_offset_pos], -value[self.__y_offset_pos]
+        self.pair = to_simple_transform(value)
+
+    @property
+    def pair(self) -> types.SimpleTransformation:
+        with self.batch():
+            return self.scale.raw, self.offset.raw
+
+    @pair.setter
+    def pair(self, value: types.SimpleTransformation):
+        with self.batch():
+            self.scale.raw, self.offset.raw = value
 
 
 class FullscreenController:
@@ -250,7 +248,7 @@ class CustomWindowController:
         self.hwnd = 0
         self._transform = WindowTransform(
             _utils.DataSource.dynamic(
-                lambda: get_transform(self.hwnd),
+                lambda: get_transform_advanced(self.hwnd),
                 lambda result: set_transform_advanced(
                     self.hwnd,
                     result

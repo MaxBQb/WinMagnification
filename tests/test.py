@@ -268,6 +268,7 @@ class MagnificationControlWindowTest(unittest.TestCase):
         mag.set_transform(self.window.magnifier_hwnd, (scale, scale * 2), (100.0, 150.0))
         self.assertEqual(self.magnifier.transform.scale.raw, (scale, 2 * scale))
         self.assertEqual(self.magnifier.transform.offset.raw, (100.0, 150.0))
+        self.assertEqual(self.magnifier.transform.pair, mag.get_transform(self.window.magnifier_hwnd))
 
     def test_idempotent(self):
         last = self.magnifier.transform.scale

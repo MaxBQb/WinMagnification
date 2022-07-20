@@ -49,7 +49,47 @@ def pos_for_matrix(array_len: int, *coords: int) -> int:
     )
 
 
-def print_matrix(matrix: typing.Tuple):
+def get_extraction_pattern(matrix_size: int, *positions: typing.Iterable[int]):
+    """
+    | Generates sequence of linear positions from matrix coords
+    | Example:
+
+    >>> list(get_extraction_pattern(9, (1, 1), (2, 2), (1, 2)))
+    [4, 8, 5]
+
+    :param matrix_size: Amount of elements in matrix
+    :param positions: Sequence of coords
+    :return: Sequence of linear coords
+    """
+    return (
+        pos_for_matrix(matrix_size, *position) for position in positions
+    )
+
+
+def extract_from_matrix(matrix: tuple, *linear_positions: int):
+    """
+    | Get values from **matrix** at **positions** specified
+    | Example:
+
+    >>> array = (
+    ...   0, 0, 0,
+    ...   0, 1, 2,
+    ...   0, 3, 0,
+    ... )
+    >>> pattern = get_extraction_pattern(len(array), (2, 1), (1, 1), (1, 2))
+    >>> extract_from_matrix(array, *pattern)
+    (3, 1, 2)
+
+    :param matrix: Linear matrix
+    :param linear_positions: Indexes in **matrix**
+    :return: Values from **positions** specified
+    """
+    return tuple(
+        matrix[position] for position in linear_positions
+    )
+
+
+def print_matrix(matrix: tuple):
     """
     | Prints matrix in pretty format
     | Example:
@@ -69,7 +109,7 @@ def print_matrix(matrix: typing.Tuple):
         )).strip())
 
 
-def get_transform_matrix(x=1.0, y=1.0, offset_x=-0.0, offset_y=-0.0) -> types.TransformationMatrix:
+def get_transform_matrix(x=1.0, y=1.0, offset_x=0.0, offset_y=0.0) -> types.TransformationMatrix:
     """
     | Creates screen transformation matrix
     | Example:
@@ -88,9 +128,13 @@ def get_transform_matrix(x=1.0, y=1.0, offset_x=-0.0, offset_y=-0.0) -> types.Tr
     :param offset_y: Vertical (^) offset from left upper corner of window
     :return: Screen transformation matrix
     """
+    if offset_y != 0.0:
+        offset_y = -offset_y
+    if offset_x != 0.0:
+        offset_x = -offset_x
     return (
-        x,   0.0, -offset_x,
-        0.0, y,   -offset_y,
+        x,   0.0, offset_x,
+        0.0, y,   offset_y,
         0.0, 0.0, 1.0,
     )
 
