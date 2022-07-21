@@ -199,7 +199,7 @@ _DEFAULT_TRANSFORM_PAIR = tools.extract_from_matrix(
     DEFAULT_TRANSFORM,
     *DEFAULT_TRANSFORM_EXTRACTION_PATTERN,
 )
-DEFAULT_TRANSFORM_PAIR: types.SimpleTransformation \
+DEFAULT_TRANSFORM_PAIR: types.SimpleTransform \
     = _DEFAULT_TRANSFORM_PAIR[:2], _DEFAULT_TRANSFORM_PAIR[2:]
 """
 Default transformation which does nothing with magnification factor

@@ -58,7 +58,7 @@ class NoControlWindowTest(unittest.TestCase):
         delay_for_visualize(1)
         self.magnifier.color_effect.reset()
         self.assertEqual(
-            self.magnifier.color_effect.raw,
+            self.magnifier.color_effect,
             self.magnifier.color_effect.default
         )
 
@@ -174,7 +174,7 @@ class NoControlWindowThreaded(unittest.TestCase):
                 delay_for_visualize(0.1)
                 color_effect.reset()
                 self.assertEqual(
-                    color_effect.raw,
+                    color_effect,
                     color_effect.default
                 )
             except Exception as e:
@@ -232,7 +232,7 @@ class MagnificationControlWindowTest(unittest.TestCase):
         delay_for_visualize(1)
         self.assertEqual(self.magnifier.color_effect.raw, mag.const.COLOR_INVERSION_EFFECT)
         self.magnifier.color_effect.reset()
-        self.assertEqual(self.magnifier.color_effect.raw, self.magnifier.color_effect.default)
+        self.assertEqual(self.magnifier.color_effect, self.magnifier.color_effect.default)
 
     def test_transform(self):
         scale = 1.5
@@ -285,7 +285,7 @@ class MagnificationControlWindowTest(unittest.TestCase):
         self.assertEqual(self.magnifier.filters.raw, result_list)
         delay_for_visualize(1)
         self.magnifier.filters.reset()
-        self.assertEqual(self.magnifier.filters.raw, self.magnifier.filters.default)
+        self.assertEqual(self.magnifier.filters, self.magnifier.filters.default)
         delay_for_visualize(1)
         self.assertRaises(RuntimeError, mag.get_filters, 0)
 

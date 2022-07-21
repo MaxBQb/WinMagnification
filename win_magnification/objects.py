@@ -5,22 +5,22 @@
 from __future__ import annotations
 
 import typing
+
+from win_magnification import _functional_wrapper as _wrapper2
 from win_magnification import _object_utils as _utils
 from win_magnification import _wrapper
-from win_magnification import _functional_wrapper as _wrapper2
 from win_magnification import const
 from win_magnification import types
 
 
-class Vector2(_utils.CompositeWrappedField[typing.Tuple[float, float]]):
+class Vector2(_utils.WrappedField[typing.Tuple[float, float]]):
     def __init__(
         self,
         datasource: typing.Optional[_utils.DataSource[typing.Tuple[float, float]]] = None,
-        default: typing.Optional[typing.Tuple[float, float]] = None
     ):
         self.x: float = 0.0
         self.y: float = 0.0
-        super().__init__(datasource, default)
+        super().__init__(datasource)
 
     @property
     def same(self) -> float:
@@ -40,15 +40,24 @@ class Vector2(_utils.CompositeWrappedField[typing.Tuple[float, float]]):
         self.x, self.y = value
 
 
-class Offset(_utils.CompositeWrappedField[typing.Tuple[int, int]]):
+class TransformScale(Vector2):
+    _DEFAULT_RAW = const.DEFAULT_TRANSFORM_PAIR[0]
+
+
+class TransformOffset(Vector2):
+    _DEFAULT_RAW = const.DEFAULT_TRANSFORM_PAIR[1]
+
+
+class FullscreenOffsetWrapper(_utils.WrappedField[typing.Tuple[int, int]]):
+    _DEFAULT_RAW = const.DEFAULT_FULLSCREEN_TRANSFORM[1]
+
     def __init__(
         self,
         datasource: typing.Optional[_utils.DataSource[typing.Tuple[int, int]]] = None,
-        default: typing.Optional[typing.Tuple[int, int]] = None
     ):
         self.x: int = 0
         self.y: int = 0
-        super().__init__(datasource, default)
+        super().__init__(datasource)
 
     @property
     def same(self) -> int:
@@ -68,17 +77,18 @@ class Offset(_utils.CompositeWrappedField[typing.Tuple[int, int]]):
         self.x, self.y = value
 
 
-class Rectangle(_utils.CompositeWrappedField[types.RectangleRaw]):
+class RectangleWrapper(_utils.WrappedField[types.Rectangle]):
+    _DEFAULT_RAW = const.ZERO_RECT
+
     def __init__(
         self,
-        datasource: typing.Optional[_utils.DataSource[types.RectangleRaw]] = None,
-        default: typing.Optional[types.RectangleRaw] = None
+        datasource: typing.Optional[_utils.DataSource[types.Rectangle]] = None,
     ):
         self.left: int = 0
         self.top: int = 0
         self.right: int = 0
         self.bottom: int = 0
-        super().__init__(datasource, default)
+        super().__init__(datasource)
 
     @property
     def _raw(self):
@@ -132,15 +142,28 @@ class Rectangle(_utils.CompositeWrappedField[types.RectangleRaw]):
             self._raw = value, value, value, value
 
 
-class FullscreenTransform(_utils.CompositeWrappedField[types.FullscreenTransformRaw]):
+class SourceRectangleWrapper(RectangleWrapper):
+    _DEFAULT_RAW = const.DEFAULT_SOURCE
+
+
+class ColorMatrixWrapper(_utils.WrappedField[types.ColorMatrix]):
+    _DEFAULT_RAW = const.DEFAULT_COLOR_EFFECT
+
+
+class FiltersListWrapper(_utils.WrappedField[tuple]):
+    _DEFAULT_RAW = const.DEFAULT_FILTERS_LIST
+
+
+class FullscreenTransformWrapper(_utils.WrappedField[types.FullscreenTransform]):
+    _DEFAULT_RAW = const.DEFAULT_FULLSCREEN_TRANSFORM
+
     def __init__(
         self,
-        datasource: typing.Optional[_utils.DataSource[types.FullscreenTransformRaw]] = None,
-        default: typing.Optional[types.FullscreenTransformRaw] = None
+        datasource: typing.Optional[_utils.DataSource[types.FullscreenTransform]] = None,
     ):
         self.scale: float = 0.0
-        self.offset = Offset(default=const.DEFAULT_FULLSCREEN_TRANSFORM[1])
-        super().__init__(datasource, default)
+        self.offset = FullscreenOffsetWrapper()
+        super().__init__(datasource)
 
     @property
     def _raw(self):
@@ -151,16 +174,17 @@ class FullscreenTransform(_utils.CompositeWrappedField[types.FullscreenTransform
         self.scale, self.offset.raw = value
 
 
-class InputTransform(_utils.CompositeWrappedField[types.InputTransformRaw]):
+class InputTransformWrapper(_utils.WrappedField[types.InputTransform]):
+    _DEFAULT_RAW = const.DEFAULT_INPUT_TRANSFORM
+
     def __init__(
-            self,
-            datasource: typing.Optional[_utils.DataSource[types.InputTransformRaw]] = None,
-            default: typing.Optional[types.InputTransformRaw] = None
+        self,
+        datasource: typing.Optional[_utils.DataSource[types.InputTransform]] = None,
     ):
         self.enabled: bool = False
-        self.source = Rectangle(default=const.ZERO_RECT)
-        self.destination = Rectangle(default=const.ZERO_RECT)
-        super().__init__(datasource, default)
+        self.source = RectangleWrapper()
+        self.destination = RectangleWrapper()
+        super().__init__(datasource)
 
     @property
     def _raw(self):
@@ -171,15 +195,16 @@ class InputTransform(_utils.CompositeWrappedField[types.InputTransformRaw]):
         self.enabled, self.source.raw, self.destination.raw = value
 
 
-class WindowTransform(_utils.CompositeWrappedField[types.TransformationMatrix]):
+class TransformationMatrixWrapper(_utils.WrappedField[types.TransformationMatrix]):
+    _DEFAULT_RAW = const.DEFAULT_TRANSFORM
+
     def __init__(
         self,
         datasource: typing.Optional[_utils.DataSource[types.TransformationMatrix]] = None,
-        default: typing.Optional[types.TransformationMatrix] = None
     ):
-        self.scale = Vector2(default=const.DEFAULT_TRANSFORM_PAIR[0])
-        self.offset = Vector2(default=const.DEFAULT_TRANSFORM_PAIR[1])
-        super().__init__(datasource, default)
+        self.scale = TransformScale()
+        self.offset = TransformOffset()
+        super().__init__(datasource)
 
     @property
     def _raw(self):
@@ -190,12 +215,12 @@ class WindowTransform(_utils.CompositeWrappedField[types.TransformationMatrix]):
         self.pair = _wrapper2.to_simple_transform(value)
 
     @property
-    def pair(self) -> types.SimpleTransformation:
+    def pair(self) -> types.SimpleTransform:
         with self.batch():
             return self.scale.raw, self.offset.raw
 
     @pair.setter
-    def pair(self, value: types.SimpleTransformation):
+    def pair(self, value: types.SimpleTransform):
         with self.batch():
             self.scale.raw, self.offset.raw = value
 
@@ -203,38 +228,35 @@ class WindowTransform(_utils.CompositeWrappedField[types.TransformationMatrix]):
 class FullscreenController:
     def __init__(self):
         self._cursor_visible = True
-        self._transform = FullscreenTransform(
+        self._transform = FullscreenTransformWrapper(
             _utils.DataSource.dynamic(
                 _wrapper.get_fullscreen_transform,
                 lambda value: _wrapper.set_fullscreen_transform(*value),
             ),
-            const.DEFAULT_FULLSCREEN_TRANSFORM
         )
-        self._color_effect = _utils.CompositeField(
+        self._color_effect = ColorMatrixWrapper(
             _utils.DataSource.dynamic(
                 _wrapper.get_fullscreen_color_effect,
                 _wrapper.set_fullscreen_color_effect,
-            ),
-            const.DEFAULT_COLOR_EFFECT,
+            )
         )
-        self._input_transform_transform = InputTransform(
+        self._input_transform_transform = InputTransformWrapper(
             _utils.DataSource.dynamic(
                 _wrapper.get_input_transform,
                 lambda value: _wrapper.set_input_transform(*value),
-            ),
-            const.DEFAULT_INPUT_TRANSFORM
+            )
         )
 
     @property
-    def transform(self) -> FullscreenTransform:
+    def transform(self) -> FullscreenTransformWrapper:
         return self._transform
 
     @property
-    def color_effect(self):
+    def color_effect(self) -> ColorMatrixWrapper:
         return self._color_effect
 
     @property
-    def input_transform(self) -> InputTransform:
+    def input_transform(self) -> InputTransformWrapper:
         return self._input_transform_transform
 
     @property
@@ -254,52 +276,48 @@ class FullscreenController:
 class CustomWindowController:
     def __init__(self):
         self.hwnd = 0
-        self._transform = WindowTransform(
+        self._transform = TransformationMatrixWrapper(
             _utils.DataSource.dynamic(
                 lambda: _wrapper2.get_transform_advanced(self.hwnd),
                 lambda result: _wrapper2.set_transform_advanced(
                     self.hwnd,
                     result
-                ),
-            ),
-            const.DEFAULT_TRANSFORM,
+                )
+            )
         )
-        self._color_effect = _utils.CompositeField(
+        self._color_effect = ColorMatrixWrapper(
             _utils.DataSource.dynamic(
                 lambda: _wrapper.get_color_effect(self.hwnd),
                 lambda value: _wrapper.set_color_effect(self.hwnd, value),
-            ),
-            const.DEFAULT_COLOR_EFFECT,
+            )
         )
-        self._source = Rectangle(
+        self._source = SourceRectangleWrapper(
             _utils.DataSource.dynamic(
                 lambda: _wrapper.get_source(self.hwnd),
                 lambda value: _wrapper.set_source(self.hwnd, value),
-            ),
-            const.DEFAULT_SOURCE,
+            )
         )
-        self._filters = _utils.CompositeField(
+        self._filters = FiltersListWrapper(
             _utils.DataSource.dynamic(
                 lambda: _wrapper.get_filters(self.hwnd)[1],
                 lambda value: _wrapper.set_filters(self.hwnd, *value),
-            ),
-            const.DEFAULT_FILTERS_LIST,
+            )
         )
 
     @property
-    def transform(self) -> WindowTransform:
+    def transform(self) -> TransformationMatrixWrapper:
         return self._transform
 
     @property
-    def color_effect(self):
+    def color_effect(self) -> ColorMatrixWrapper:
         return self._color_effect
 
     @property
-    def source(self) -> Rectangle:
+    def source(self) -> SourceRectangleWrapper:
         return self._source
 
     @property
-    def filters(self):
+    def filters(self) -> FiltersListWrapper:
         return self._filters
 
 

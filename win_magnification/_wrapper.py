@@ -92,7 +92,7 @@ def set_fullscreen_transform(scale: float, offset: typing.Tuple[int, int]) -> No
 
 
 @_utils.require_single_thread()
-def get_fullscreen_transform() -> types.FullscreenTransformRaw:
+def get_fullscreen_transform() -> types.FullscreenTransform:
     """
     Retrieves the magnification settings for the full-screen magnifier.
 
@@ -172,7 +172,7 @@ def get_transform(hwnd: int) -> types.TransformationMatrix:
 
 
 @_utils.raise_win_errors
-def set_source(hwnd: int, rectangle: types.RectangleRaw) -> None:
+def set_source(hwnd: int, rectangle: types.Rectangle) -> None:
     """
     Sets the source rectangle for the magnification window.
 
@@ -183,7 +183,7 @@ def set_source(hwnd: int, rectangle: types.RectangleRaw) -> None:
     return _DLL.MagSetWindowSource(hwnd, wintypes.RECT(*rectangle))
 
 
-def get_source(hwnd: int) -> types.RectangleRaw:
+def get_source(hwnd: int) -> types.Rectangle:
     """
     Gets the rectangle of the area that is being magnified.
 
@@ -241,7 +241,7 @@ def get_filters(hwnd: int) -> typing.Tuple[bool, typing.Tuple[int]]:
 
 
 @_utils.raise_win_errors
-def set_input_transform(is_enabled: bool, source: types.RectangleRaw, destination: types.RectangleRaw) -> None:
+def set_input_transform(is_enabled: bool, source: types.Rectangle, destination: types.Rectangle) -> None:
     """
     | Sets the current active input transformation for pen and touch input,
       represented as a source rectangle and a destination rectangle.
@@ -265,7 +265,7 @@ def set_input_transform(is_enabled: bool, source: types.RectangleRaw, destinatio
     )
 
 
-def get_input_transform() -> types.InputTransformRaw:
+def get_input_transform() -> types.InputTransform:
     """
     Retrieves the current input transformation for pen and touch input,
     represented as a source rectangle and a destination rectangle.

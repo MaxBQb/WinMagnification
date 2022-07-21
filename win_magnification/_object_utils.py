@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import abc
 import contextlib
 import inspect
 import threading
@@ -208,50 +207,17 @@ class DataSource(typing.Generic[_T]):
         )
 
 
-class CompositeField(typing.Generic[_T]):
-    def __init__(
-            self,
-            datasource: DataSource[_T],
-            default: _T,
-    ):
-        self._datasource = datasource
-        self._default = default
-
-    def __eq__(self, other):
-        if isinstance(other, CompositeField):
-            return self.raw == other.raw
-        return super().__eq__(other)
-
-    @property
-    def default(self) -> _T:
-        return self._default
-
-    @property
-    def raw(self) -> _T:
-        return self._datasource.data
-
-    @raw.setter
-    def raw(self, value: _T):
-        self._datasource.data = value
-
-    @raw.deleter
-    def raw(self):
-        self.raw = self._default
-
-    def reset(self):
-        del self.raw
-
-
 _C = typing.TypeVar('_C', bound='CompositeWrappedField')
 
 
-class CompositeWrappedField(CompositeField[_T], PropertiesObserver, typing.Generic[_T]):
-    def __init__(
-            self,
-            datasource: typing.Optional[DataSource[_T]] = None,
-            default: typing.Optional[_T] = None
-    ):
+class WrappedField(PropertiesObserver, typing.Generic[_T]):
+    _DEFAULT_RAW: _T
+    _DEFAULT: _C = None
 
+    def __init__(
+        self,
+        datasource: typing.Optional[DataSource[_T]] = None
+    ):
         def set_value(x: _T):
             with self.batch():
                 self._raw = x
@@ -260,28 +226,17 @@ class CompositeWrappedField(CompositeField[_T], PropertiesObserver, typing.Gener
             with self._ignore_all_changes():
                 return self._raw
 
-        CompositeField.__init__(
-            self,
-            datasource or DataSource.dynamic(
-                get_value,
-                set_value,
-            ),
-            default
+        self._datasource = datasource or DataSource.dynamic(
+            get_value,
+            set_value,
         )
-        PropertiesObserver.__init__(self)
-        if default is not None:
-            self._default_wrapped: _C = self.__class__(
-                DataSource.const(default),
-                default=None,
-            )
+        super().__init__()
 
-            def set_raw():
-                with self._ignore_all_changes():
-                    self.raw = self._raw
+        def set_raw():
+            with self._ignore_all_changes():
+                self.raw = self._raw
 
-            self.subscribe(set_raw)
-        else:
-            self._default_wrapped = None
+        self.subscribe(set_raw)
         self._subscribe_initial()
         self._source_dependent = set(self._properties_observed)
 
@@ -299,9 +254,9 @@ class CompositeWrappedField(CompositeField[_T], PropertiesObserver, typing.Gener
                 key in getattr(self, '_source_dependent'):
             if not self._all_changes_ignored:
                 self._read_all()
-            if isinstance(value, CompositeWrappedField):
+            if isinstance(value, WrappedField):
                 try:
-                    field: CompositeWrappedField = getattr(self, key)
+                    field: WrappedField = getattr(self, key)
                     field.raw = value.raw
                     return
                 except AttributeError:
@@ -315,12 +270,10 @@ class CompositeWrappedField(CompositeField[_T], PropertiesObserver, typing.Gener
             return super().__delattr__(item)
 
     @property
-    @abc.abstractmethod
     def _raw(self) -> _T:
-        pass
+        return None
 
     @_raw.setter
-    @abc.abstractmethod
     def _raw(self, value: _T):
         pass
 
@@ -342,5 +295,29 @@ class CompositeWrappedField(CompositeField[_T], PropertiesObserver, typing.Gener
                 self._datasource.use_cache = False
 
     @property
-    def default(self: _C) -> _C:  # type: ignore
-        return self._default_wrapped if self._default_wrapped else self
+    def default(self: _C) -> _C:
+        if self._DEFAULT is None:
+            self.__class__._DEFAULT = self.__class__(
+                DataSource.const(self._DEFAULT_RAW)
+            )
+        return self._DEFAULT
+
+    def __eq__(self, other):
+        if isinstance(other, WrappedField):
+            return self.raw == other.raw
+        return super().__eq__(other)
+
+    @property
+    def raw(self) -> _T:
+        return self._datasource.data
+
+    @raw.setter
+    def raw(self, value: _T):
+        self._datasource.data = value
+
+    @raw.deleter
+    def raw(self):
+        self.raw = self._DEFAULT_RAW
+
+    def reset(self):
+        del self.raw

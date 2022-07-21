@@ -19,7 +19,7 @@ import win_magnification as mag
 # https://github.com/microsoft/Windows-classic-samples/blob/main/Samples/Magnification/cpp/Windowed/MagnifierSample.cpp
 
 
-def make_partial_screen(hwnd, rectangle: mag.types.RectangleRaw):
+def make_partial_screen(hwnd, rectangle: mag.types.Rectangle):
     win32gui.SetWindowLong(
         hwnd,
         win32con.GWL_EXSTYLE,
@@ -45,7 +45,7 @@ def make_partial_screen(hwnd, rectangle: mag.types.RectangleRaw):
     )
 
 
-def get_fullscreen_size() -> mag.types.RectangleRaw:
+def get_fullscreen_size() -> mag.types.Rectangle:
     # Calculate the span of the display area.
     max_x = win32api.GetSystemMetrics(win32con.SM_CXSCREEN)
     max_y = win32api.GetSystemMetrics(win32con.SM_CYSCREEN)
@@ -55,7 +55,7 @@ def get_fullscreen_size() -> mag.types.RectangleRaw:
 
 
 # noinspection SpellCheckingInspection
-def make_fullscreen(hwnd, rectangle: mag.types.RectangleRaw):
+def make_fullscreen(hwnd, rectangle: mag.types.Rectangle):
     # The window must be styled as layered for proper rendering.
     # It is styled as transparent so that it does not capture mouse clicks.
     # For draw on top of TaskManager/System menus we need to use win10 zBand
@@ -105,12 +105,12 @@ class AbstractWindow(metaclass=abc.ABCMeta):
         self.position = (0, 0)
         self.size = (400, 400)
         # noinspection PyTypeChecker
-        self.rectangle: mag.types.RectangleRaw = (*self.position, *self.size)
-        self._fullscreen_rectangle: mag.types.RectangleRaw = (0, 0, 200, 200)
+        self.rectangle: mag.types.Rectangle = (*self.position, *self.size)
+        self._fullscreen_rectangle: mag.types.Rectangle = (0, 0, 200, 200)
         self._fullscreen_mode = False
 
     @property
-    def rectangle(self) -> mag.types.RectangleRaw:
+    def rectangle(self) -> mag.types.Rectangle:
         # noinspection PyTypeChecker
         return *self.position, *self.size  # type: ignore
 

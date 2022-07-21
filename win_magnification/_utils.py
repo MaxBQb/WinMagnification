@@ -10,7 +10,7 @@ import functools
 import threading
 import typing
 
-from win_magnification.types import RectangleRaw
+from win_magnification.types import Rectangle
 
 P = [typing.Any]
 if typing.TYPE_CHECKING:
@@ -45,7 +45,7 @@ def to_c_array(matrix: tuple, content_type=ctypes.c_float):
     return (content_type * len(matrix))(*matrix)
 
 
-def to_py_rectangle(rectangle: ctypes.wintypes.RECT) -> RectangleRaw:
+def to_py_rectangle(rectangle: ctypes.wintypes.RECT) -> Rectangle:
     # noinspection PyTypeChecker
     return (  # type: ignore
         rectangle.left,

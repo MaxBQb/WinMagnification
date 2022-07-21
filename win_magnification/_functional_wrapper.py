@@ -69,7 +69,7 @@ def set_transform(
     ))
 
 
-def to_simple_transform(matrix: types.TransformationMatrix) -> types.SimpleTransformation:
+def to_simple_transform(matrix: types.TransformationMatrix) -> types.SimpleTransform:
     """
     Get (scale, offset) tuple from **matrix**
 
@@ -92,7 +92,7 @@ def to_simple_transform(matrix: types.TransformationMatrix) -> types.SimpleTrans
     )
 
 
-def get_transform(hwnd: int) -> types.SimpleTransformation:
+def get_transform(hwnd: int) -> types.SimpleTransform:
     """
     Use to get the magnification transformation (**scale**, **offset**) on the window provided by the window handle
     **Offset** counts from left-upper corner of magnification window

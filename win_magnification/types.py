@@ -64,7 +64,7 @@ TransformationMatrix: typing.TypeAlias = typing.Tuple[
 | Where (0, 0) is upper-left corner of magnifier window
 """
 
-SimpleTransformation: typing.TypeAlias = typing.Tuple[
+SimpleTransform: typing.TypeAlias = typing.Tuple[
     typing.Tuple[float, float],
     typing.Tuple[float, float],
 ]
@@ -75,7 +75,7 @@ SimpleTransformation: typing.TypeAlias = typing.Tuple[
 | **Offset** starts from upper-left corner of magnification window
 """
 
-FullscreenTransformRaw: typing.TypeAlias = typing.Tuple[float, typing.Tuple[int, int]]
+FullscreenTransform: typing.TypeAlias = typing.Tuple[float, typing.Tuple[int, int]]
 """
 | Tuple of **magnification factor** and **offset** for the full-screen magnifier:
 | **magnification factor** = 1.0 |=> screen content is not being magnified.
@@ -85,12 +85,12 @@ FullscreenTransformRaw: typing.TypeAlias = typing.Tuple[float, typing.Tuple[int,
 | -262144 <= offset(x, y) <= 262144.
 """
 
-RectangleRaw: typing.TypeAlias = typing.Tuple[int, int, int, int]
+Rectangle: typing.TypeAlias = typing.Tuple[int, int, int, int]
 """
 Tuple of ints: (**left**, **top**, **right**, **bottom**)
 """
 
-InputTransformRaw: typing.TypeAlias = typing.Tuple[bool, RectangleRaw, RectangleRaw]
+InputTransform: typing.TypeAlias = typing.Tuple[bool, Rectangle, Rectangle]
 """
 | Tuple of **is_enabled**, **source** and **destination**:
 - **is_enabled**: True if input translation is enabled.
