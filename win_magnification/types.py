@@ -49,19 +49,21 @@ TransformationMatrix: typing.TypeAlias = typing.Tuple[
 
 | **T** is Affine transformation
 | **N** is the magnification factor.
-| Note: it's not mentioned in `docs <https://docs.microsoft.com/en-us/windows/win32/api/magnification/ns-magnification-magtransform>`_, but I noticed this:
 
-=== === ===
- X   Y   T
-=== === ===
- N  0.0 -X
-0.0  N  -Y
-0.0 0.0 1.0
-=== === ===
+.. tip::
+   it's not mentioned in `docs <https://docs.microsoft.com/en-us/windows/win32/api/magnification/ns-magnification-magtransform>`_, but I noticed this:
 
-| **X** Offset from left to right
-| **Y** Offset from up to down
-| Where (0, 0) is upper-left corner of magnifier window
+   === === ===
+    X   Y   T
+   === === ===
+    N  0.0 -X
+   0.0  N  -Y
+   0.0 0.0 1.0
+   === === ===
+
+   | **X** Offset from left to right
+   | **Y** Offset from up to down
+   | Where (0, 0) is |upleft| upper-left corner of magnifier window
 """
 
 SimpleTransform: typing.TypeAlias = typing.Tuple[
@@ -72,7 +74,9 @@ SimpleTransform: typing.TypeAlias = typing.Tuple[
 | Tuple of (**scale**, **offset**)
 | **scale**: (x, y)
 | **offset**: (x, y)
-| **Offset** starts from upper-left corner of magnification window
+
+.. hint::
+   **Offset** starts from |upleft| upper-left corner of magnification window
 """
 
 FullscreenTransform: typing.TypeAlias = typing.Tuple[float, typing.Tuple[int, int]]
@@ -81,13 +85,13 @@ FullscreenTransform: typing.TypeAlias = typing.Tuple[float, typing.Tuple[int, in
 | **magnification factor** = 1.0 |=> screen content is not being magnified.
 | 1.0 < **magnification factor** <= 4096.0 |=> scale factor for magnification.
 | **magnification factor** < 1.0 is **not valid**.
-| The **offset** is relative to the upper-left corner of the primary monitor, in unmagnified coordinates.
+| The **offset** is relative to the |upleft| upper-left corner of the primary monitor, in unmagnified coordinates.
 | -262144 <= offset(x, y) <= 262144.
 """
 
 Rectangle: typing.TypeAlias = typing.Tuple[int, int, int, int]
 """
-Tuple of ints: (**left**, **top**, **right**, **bottom**)
+Tuple of ints: (|left| **left**, |up| **top**, |right| **right**, |down| **bottom**)
 """
 
 InputTransform: typing.TypeAlias = typing.Tuple[bool, Rectangle, Rectangle]

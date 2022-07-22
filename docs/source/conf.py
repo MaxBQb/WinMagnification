@@ -33,17 +33,30 @@ release = '0.0.1'
 extensions = [
     'sphinx.ext.duration',
     'sphinx.ext.doctest',
+    'sphinx.ext.intersphinx',
+    'sphinx_design',  # https://sphinx-design.readthedocs.io/en/rtd-theme/badges_buttons.html
+    'sphinx.ext.viewcode',
+    'sphinx_tabs.tabs',
+    'sphinx-prompt',
+    'sphinx_toolbox',  # https://sphinx-toolbox.readthedocs.io/en/stable/extensions/
+    'sphinx_toolbox.sidebar_links',
+    'sphinx_toolbox.github',
+    'sphinx_toolbox.more_autosummary',
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
-    'sphinx.ext.intersphinx',
 ]
+github_username = 'MaxBQb'
+github_repository = 'WinMagnification'
 add_module_names = False
+autodoc_typehints = 'signature'
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
     'sphinx': ('https://www.sphinx-doc.org/en/master/', None),
 }
 intersphinx_disabled_domains = ['std']
 autosummary_generate = True
+autodoc_member_order = 'bysource'
+
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -63,8 +76,11 @@ html_theme = 'sphinx_rtd_theme'
 
 autodoc_type_aliases = {
     'types.ColorMatrix': 'types.ColorMatrix',
+    'ColorMatrix': 'types.ColorMatrix',
     'types.TransformationMatrix': 'types.TransformationMatrix',
     'types.RectangleRaw': 'Tuple[int, int, int, int]',
+    'T': 'T',
+    'WrappedFieldType': 'WrappedFieldType',
 }
 autodoc_typehints_format = 'short'
 

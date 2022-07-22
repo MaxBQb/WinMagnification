@@ -17,4 +17,4 @@ from win_magnification._wrapper import (
     get_input_transform, set_input_transform,
     set_cursor_visibility
 )
-from win_magnification.objects import WinMagnificationAPI
+from win_magnification._objects import WinMagnificationAPI

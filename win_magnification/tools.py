@@ -124,8 +124,8 @@ def get_transform_matrix(x=1.0, y=1.0, offset_x=0.0, offset_y=0.0) -> types.Tran
 
     :param x: Horizontal magnification
     :param y: Vertical magnification
-    :param offset_x: Horizontal (<==) offset from left upper corner of window
-    :param offset_y: Vertical (^) offset from left upper corner of window
+    :param offset_x: Horizontal |right| offset from |upleft| left upper corner of window
+    :param offset_y: Vertical |down| offset from |upleft| left upper corner of window
     :return: Screen transformation matrix
     """
     if offset_y != 0.0:

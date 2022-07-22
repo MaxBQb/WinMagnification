@@ -10,8 +10,10 @@ from win_magnification import types
 # C Constants (feel free to use)
 WC_MAGNIFIER = "Magnifier"
 """
-| Window Class of Magnifier
-| Note: class registered only after :func:`.initialize` call
+Window Class of Magnifier
+
+.. warning::
+   Class registered only after :func:`.initialize` call
 """
 # noinspection SpellCheckingInspection
 MS_SHOWMAGNIFIEDCURSOR = 1
@@ -43,8 +45,10 @@ Exclude the windows from magnification.
 # noinspection SpellCheckingInspection
 MW_FILTERMODE_INCLUDE = 1
 """
-| Magnify the windows.
-| Note: This value is not supported on Windows 7 or newer.
+Magnify the windows.
+
+.. attention::
+   This value is not supported on Windows 7 or newer.
 
 :meta private:
 """

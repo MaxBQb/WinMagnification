@@ -85,7 +85,7 @@ def set_fullscreen_transform(scale: float, offset: typing.Tuple[int, int]) -> No
     :param scale: The new magnification factor for the full-screen magnifier.
         1.0 <= scale <= 4096.0. If this value is 1.0, the screen content is not magnified and no offsets are applied.
     :param offset:
-        The offset is relative to the upper-left corner of the primary monitor, in unmagnified coordinates.
+        The offset is relative to the |upleft| upper-left corner of the primary monitor, in unmagnified coordinates.
         -262144 <= (x, y) <= 262144.
     """
     return _DLL.MagSetFullscreenTransform(scale, *offset)
@@ -288,8 +288,10 @@ def get_input_transform() -> types.InputTransform:
 @_utils.raise_win_errors
 def set_cursor_visibility(show_cursor: bool):
     """
-    | Shows or hides the system cursor.
-    | Personal note: invisibility applies until cursor moves
+    Shows or hides the system cursor.
+
+    .. note::
+       Invisibility applies until cursor moves
 
     :param show_cursor: True to show the system cursor,
         or False to hide it.
