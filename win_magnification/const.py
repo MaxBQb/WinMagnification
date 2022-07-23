@@ -67,10 +67,13 @@ COLOR_NO_EFFECT = (
 """
 Color transformation matrix which does nothing with colors
 
-.. runblock:: pycon
-
-    >>> import win_magnification as mag
-    >>> mag.tools.print_matrix(mag.const.COLOR_NO_EFFECT)
+===  ===  ===  ===  ===
+1.0  0.0  0.0  0.0  0.0
+0.0  1.0  0.0  0.0  0.0
+0.0  0.0  1.0  0.0  0.0
+0.0  0.0  0.0  1.0  0.0
+0.0  0.0  0.0  0.0  1.0
+===  ===  ===  ===  ===
 
 :type: :data:`.ColorMatrix`
 """
@@ -88,10 +91,13 @@ COLOR_INVERSION_EFFECT = (
 | White -> Black
 | And so on...
 
-.. runblock:: pycon
-
-    >>> import win_magnification as mag
-    >>> mag.tools.print_matrix(mag.const.COLOR_INVERSION_EFFECT)
+==== ==== ====  ===  ===
+-1.0  0.0  0.0  0.0  0.0
+ 0.0 -1.0  0.0  0.0  0.0
+ 0.0  0.0 -1.0  0.0  0.0
+ 0.0  0.0  0.0  1.0  0.0
+ 1.0  1.0  1.0  0.0  1.0
+==== ==== ====  ===  ===
 
 :type: :data:`.ColorMatrix`
 """
@@ -106,10 +112,13 @@ COLOR_GRAYSCALE_EFFECT = (
 """
 Color transformation matrix which convert colors into shades of gray
 
-.. runblock:: pycon
-
-    >>> import win_magnification as mag
-    >>> mag.tools.print_matrix(mag.const.COLOR_GRAYSCALE_EFFECT)
+===  ===  ===  ===  ===
+0.3  0.3  0.3  0.0  0.0
+0.6  0.6  0.6  0.0  0.0
+0.1  0.1  0.1  0.0  0.0
+0.0  0.0  0.0  1.0  0.0
+0.0  0.0  0.0  0.0  1.0
+===  ===  ===  ===  ===
 
 :type: :data:`.ColorMatrix`
 """
@@ -121,10 +130,13 @@ COLOR_INVERTED_GRAYSCALE_EFFECT = tools.combine_matrices(
 """
 Color transformation matrix which convert inverted colors into shades of gray
 
-.. runblock:: pycon
-
-    >>> import win_magnification as mag
-    >>> mag.tools.print_matrix(mag.const.COLOR_INVERTED_GRAYSCALE_EFFECT)
+==== ==== ====  ===  ===
+-0.3 -0.3 -0.3  0.0  0.0
+-0.6 -0.6 -0.6  0.0  0.0
+-0.1 -0.1 -0.1  0.0  0.0
+ 0.0  0.0  0.0  1.0  0.0
+ 1.0  1.0  1.0  0.0  1.0
+==== ==== ====  ===  ===
 
 :type: :data:`.ColorMatrix`
 """
@@ -139,10 +151,13 @@ COLOR_SEPIA_EFFECT = (
 """
 Color transformation matrix which convert colors into shades of brown
 
-.. runblock:: pycon
-
-    >>> import win_magnification as mag
-    >>> mag.tools.print_matrix(mag.const.COLOR_SEPIA_EFFECT)
+=====  =====  =====  ===  ===
+0.393  0.349  0.272  0.0  0.0
+0.769  0.686  0.534  0.0  0.0
+0.189  0.168  0.131  0.0  0.0
+0.0    0.0    0.0    1.0  0.0
+0.0    0.0    0.0    0.0  1.0
+=====  =====  =====  ===  ===
 
 :type: :data:`.ColorMatrix`
 """
@@ -157,10 +172,13 @@ COLOR_BLIND_DEUTERANOPIA_EFFECT = (
 """
 Color blindness: Deuteranomaly (green-weak)
 
-.. runblock:: pycon
-
-    >>> import win_magnification as mag
-    >>> mag.tools.print_matrix(mag.const.COLOR_BLIND_DEUTERANOPIA_EFFECT)
+===  =====  =====  ===  ===
+0.8  0.258  0.0    0.0  0.0
+0.2  0.742  0.142  0.0  0.0
+0.0  0.0    0.858  0.0  0.0
+0.0  0.0    0.0    1.0  0.0
+0.0  0.0    0.0    0.0  1.0
+===  =====  =====  ===  ===
 
 :type: :data:`.ColorMatrix`
 """
@@ -175,10 +193,13 @@ COLOR_BLIND_PROTANOPIA_EFFECT = (
 """
 Color blindness: Protanomaly (red-weak)
 
-.. runblock:: pycon
-
-    >>> import win_magnification as mag
-    >>> mag.tools.print_matrix(mag.const.COLOR_BLIND_PROTANOPIA_EFFECT)
+=====  =====  =====  ===  ===
+0.817  0.333  0.0    0.0  0.0
+0.183  0.667  0.125  0.0  0.0
+0.0    0.0    0.875  0.0  0.0
+0.0    0.0    0.0    1.0  0.0
+0.0    0.0    0.0    0.0  1.0
+=====  =====  =====  ===  ===
 
 :type: :data:`.ColorMatrix`
 """
@@ -193,10 +214,13 @@ COLOR_BLIND_TRITANOPIA_EFFECT = (
 """
 Color blindness: Tritanomaly (blue-yellow weak)
 
-.. runblock:: pycon
-
-    >>> import win_magnification as mag
-    >>> mag.tools.print_matrix(mag.const.COLOR_BLIND_TRITANOPIA_EFFECT)
+=====  =====  =====  ===  ===
+0.967  0.0    0.0    0.0  0.0
+0.033  0.733  0.183  0.0  0.0
+0.0    0.267  0.817  0.0  0.0
+0.0    0.0    0.0    1.0  0.0
+0.0    0.0    0.0    0.0  1.0
+=====  =====  =====  ===  ===
 
 :type: :data:`.ColorMatrix`
 """
@@ -214,6 +238,14 @@ DEFAULT_COLOR_EFFECT = COLOR_NO_EFFECT
 """
 Default color transformation matrix which does nothing with colors
 
+===  ===  ===  ===  ===
+1.0  0.0  0.0  0.0  0.0
+0.0  1.0  0.0  0.0  0.0
+0.0  0.0  1.0  0.0  0.0
+0.0  0.0  0.0  1.0  0.0
+0.0  0.0  0.0  0.0  1.0
+===  ===  ===  ===  ===
+
 :type: :data:`.ColorMatrix`
 """
 DEFAULT_TRANSFORM = (
@@ -224,10 +256,11 @@ DEFAULT_TRANSFORM = (
 """
 Default transformation matrix which does nothing with magnification factor
 
-.. runblock:: pycon
-
-    >>> import win_magnification as mag
-    >>> mag.tools.print_matrix(mag.const.DEFAULT_TRANSFORM)
+===  ===  ===
+1.0  0.0  0.0
+0.0  1.0  0.0
+0.0  0.0  1.0
+===  ===  ===
 
 :type: :data:`.TransformationMatrix`
 """
