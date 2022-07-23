@@ -45,6 +45,7 @@ extensions = [
     'sphinx_toolbox.github',
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
+    'sphinx_autorun'
 ]
 github_username = 'MaxBQb'
 github_repository = 'WinMagnification'

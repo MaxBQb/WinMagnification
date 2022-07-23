@@ -89,24 +89,58 @@ def extract_from_matrix(matrix: tuple, *linear_positions: int):
     )
 
 
+def matrix_to_str(matrix: tuple):
+    """
+    | Converts matrix to pretty string format
+    | Example:
+    >>> matrix_to_str((2,))
+    '2'
+    >>> print(matrix_to_str((1,2,-3.9,4)))
+     1    2
+    -3.9  4
+
+    :param matrix: Array which sqrt(size) is natural number
+    """
+    row_len = get_matrix_side(len(matrix))
+    matrix = tuple(map(str, matrix))
+    negative_column = [False]*row_len
+    column_width = [1]*row_len
+
+    for i in range(row_len):
+        for j, element in enumerate(matrix[i * row_len:(1 + i) * row_len]):
+            if element.startswith('-'):
+                negative_column[j] = True
+
+            if len(element) > column_width[j]:
+                column_width[j] = len(element)
+
+    for i in range(row_len):
+        # Exclude '-' from width calculation
+        if negative_column[i]:
+            column_width[i] -= 1
+
+    return '\n'.join(
+        (' '.join((
+            (' ' if not (j == 0 and not negative_column[j]) and not element.startswith('-')
+             else '') + element.ljust(column_width[j], ' ')
+            for j, element in enumerate(matrix[i * row_len:(1 + i) * row_len])
+        ))).rstrip() for i in range(row_len)
+    )
+
+
 def print_matrix(matrix: tuple):
     """
     | Prints matrix in pretty format
     | Example:
     >>> print_matrix((2,))
     2
-    >>> print_matrix((1,2,3,4))
-    1    2
-    3    4
+    >>> print_matrix((1,2,-3.9,4))
+     1    2
+    -3.9  4
 
     :param matrix: Array which sqrt(size) is natural number
     """
-    row_len = get_matrix_side(len(matrix))
-    for i in range(row_len):
-        print(' '.join((
-            str(element).rjust(4, ' ')
-            for element in matrix[i*row_len:(1+i)*row_len]
-        )).strip())
+    print(matrix_to_str(matrix))
 
 
 def get_transform_matrix(x=1.0, y=1.0, offset_x=0.0, offset_y=0.0) -> types.TransformationMatrix:

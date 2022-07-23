@@ -67,6 +67,11 @@ COLOR_NO_EFFECT = (
 """
 Color transformation matrix which does nothing with colors
 
+.. runblock:: pycon
+
+    >>> import win_magnification as mag
+    >>> mag.tools.print_matrix(mag.const.COLOR_NO_EFFECT)
+
 :type: :data:`.ColorMatrix`
 """
 
@@ -83,6 +88,11 @@ COLOR_INVERSION_EFFECT = (
 | White -> Black
 | And so on...
 
+.. runblock:: pycon
+
+    >>> import win_magnification as mag
+    >>> mag.tools.print_matrix(mag.const.COLOR_INVERSION_EFFECT)
+
 :type: :data:`.ColorMatrix`
 """
 
@@ -96,6 +106,11 @@ COLOR_GRAYSCALE_EFFECT = (
 """
 Color transformation matrix which convert colors into shades of gray
 
+.. runblock:: pycon
+
+    >>> import win_magnification as mag
+    >>> mag.tools.print_matrix(mag.const.COLOR_GRAYSCALE_EFFECT)
+
 :type: :data:`.ColorMatrix`
 """
 
@@ -105,6 +120,11 @@ COLOR_INVERTED_GRAYSCALE_EFFECT = tools.combine_matrices(
 )
 """
 Color transformation matrix which convert inverted colors into shades of gray
+
+.. runblock:: pycon
+
+    >>> import win_magnification as mag
+    >>> mag.tools.print_matrix(mag.const.COLOR_INVERTED_GRAYSCALE_EFFECT)
 
 :type: :data:`.ColorMatrix`
 """
@@ -119,6 +139,11 @@ COLOR_SEPIA_EFFECT = (
 """
 Color transformation matrix which convert colors into shades of brown
 
+.. runblock:: pycon
+
+    >>> import win_magnification as mag
+    >>> mag.tools.print_matrix(mag.const.COLOR_SEPIA_EFFECT)
+
 :type: :data:`.ColorMatrix`
 """
 
@@ -131,6 +156,11 @@ COLOR_BLIND_DEUTERANOPIA_EFFECT = (
 )
 """
 Color blindness: Deuteranomaly (green-weak)
+
+.. runblock:: pycon
+
+    >>> import win_magnification as mag
+    >>> mag.tools.print_matrix(mag.const.COLOR_BLIND_DEUTERANOPIA_EFFECT)
 
 :type: :data:`.ColorMatrix`
 """
@@ -145,6 +175,11 @@ COLOR_BLIND_PROTANOPIA_EFFECT = (
 """
 Color blindness: Protanomaly (red-weak)
 
+.. runblock:: pycon
+
+    >>> import win_magnification as mag
+    >>> mag.tools.print_matrix(mag.const.COLOR_BLIND_PROTANOPIA_EFFECT)
+
 :type: :data:`.ColorMatrix`
 """
 
@@ -157,6 +192,11 @@ COLOR_BLIND_TRITANOPIA_EFFECT = (
 )
 """
 Color blindness: Tritanomaly (blue-yellow weak)
+
+.. runblock:: pycon
+
+    >>> import win_magnification as mag
+    >>> mag.tools.print_matrix(mag.const.COLOR_BLIND_TRITANOPIA_EFFECT)
 
 :type: :data:`.ColorMatrix`
 """
@@ -183,6 +223,11 @@ DEFAULT_TRANSFORM = (
 )
 """
 Default transformation matrix which does nothing with magnification factor
+
+.. runblock:: pycon
+
+    >>> import win_magnification as mag
+    >>> mag.tools.print_matrix(mag.const.DEFAULT_TRANSFORM)
 
 :type: :data:`.TransformationMatrix`
 """

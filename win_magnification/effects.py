@@ -68,6 +68,14 @@ def contrast(value=1.0) -> types.ColorMatrix:
     """
     | Make colors more bright and contrast
     | Uses :func:`.get_transition`
+    | Example:
+
+    >>> tools.print_matrix(contrast())
+    1.2  0.0  0.0  0.0 -0.2
+    0.0  1.2  0.0  0.0 -0.2
+    0.0  0.0  1.2  0.0 -0.2
+    0.0  0.0  0.0  1.0  0.0
+    0.0  0.0  0.0  0.0  1.0
 
     :param value: Power of effect applied
     :return: Color sepia effect matrix
@@ -86,9 +94,17 @@ def binary(value=1) -> types.ColorMatrix:
     """
     | Only white and black colors stay
     | Uses :func:`.get_transition`
+    | Example:
+
+    >>> tools.print_matrix(binary())
+     127.0  127.0  127.0  0.0  0.0
+     127.0  127.0  127.0  0.0  0.0
+     127.0  127.0  127.0  0.0  0.0
+     0.0    0.0    0.0    1.0  0.0
+    -180.0 -180.0 -180.0  0.0  1.0
 
     :param value: Power of effect applied, normally uses -1, 0, 1,
-        on low values (like 0.001) act like `.get_transition` value
+        on low values (like 0.001) act like :func:`.get_transition` value
     :return: Color binary effect matrix
     """
 
