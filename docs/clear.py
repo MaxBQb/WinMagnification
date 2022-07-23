@@ -1,7 +1,14 @@
+import os.path
 import shutil
 
-try:
-    shutil.rmtree(r'.\source\_autosummary')
-    shutil.rmtree(r'.\build')
-except FileNotFoundError:
-    pass
+
+for path in [
+    r'.\source\generated',
+    r'.\build',
+]:
+    try:
+        path = os.path.abspath(path)
+        shutil.rmtree(path)
+        print("Removed", path)
+    except FileNotFoundError:
+        print("Skipped", path)

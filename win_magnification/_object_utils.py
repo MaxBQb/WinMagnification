@@ -199,7 +199,7 @@ class DataSource(typing.Generic[T]):
         self.setter(value)
 
     @classmethod
-    def dynamic(cls, source: TSource, setter: TSetter) -> WrappedFieldType:
+    def dynamic(cls: typing.Type[WrappedFieldType], source: TSource, setter: TSetter) -> WrappedFieldType:
         """
         Creates :class:`DataSource` with source/setter specified
 
@@ -213,7 +213,7 @@ class DataSource(typing.Generic[T]):
         return result
 
     @classmethod
-    def const(cls, value: T) -> WrappedFieldType:
+    def const(cls: typing.Type[WrappedFieldType], value: T) -> WrappedFieldType:
         """
         Creates :class:`DataSource` which constantly returns
         the same value, that can't be changed
@@ -236,7 +236,7 @@ class WrappedField(PropertiesObserver, typing.Generic[T]):
     | Mostly used to allow selective changes of complex fields
     """
     _DEFAULT_RAW: T
-    _DEFAULT: WrappedFieldType
+    _DEFAULT: WrappedFieldType  # type: ignore
 
     def __init__(
         self,

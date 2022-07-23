@@ -14,6 +14,9 @@ from win_magnification import types
 
 
 class Vector2(_utils.WrappedField[typing.Tuple[float, float]]):
+    """
+    Pair of horizontal and vertical components
+    """
     def __init__(
         self,
         datasource: typing.Optional[_utils.DataSource[typing.Tuple[float, float]]] = None,
@@ -54,6 +57,8 @@ class Vector2(_utils.WrappedField[typing.Tuple[float, float]]):
 
 class TransformScale(Vector2):
     """
+    Magnifier window scale (horizontal, vertical)
+
     .. include:: ../shared/wrapper/component.rst
     """
     _DEFAULT_RAW = const.DEFAULT_TRANSFORM_PAIR[0]
@@ -61,6 +66,9 @@ class TransformScale(Vector2):
 
 class TransformOffset(Vector2):
     """
+    Magnifier window target offset (x |down|, y |right|)
+    from |upleft| upper-left corner of magnifier screen
+
     .. include:: ../shared/wrapper/component.rst
     """
     _DEFAULT_RAW = const.DEFAULT_TRANSFORM_PAIR[1]
@@ -68,6 +76,9 @@ class TransformOffset(Vector2):
 
 class FullscreenOffsetWrapper(_utils.WrappedField[typing.Tuple[int, int]]):
     """
+    | Fullscreen magnification target offset
+    | Relative to the |upleft| upper-left corner of the primary monitor
+
     .. include:: ../shared/wrapper/component.rst
     """
     _DEFAULT_RAW = const.DEFAULT_FULLSCREEN_TRANSFORM[1]
@@ -114,6 +125,8 @@ class FullscreenOffsetWrapper(_utils.WrappedField[typing.Tuple[int, int]]):
 
 class RectangleWrapper(_utils.WrappedField['types.Rectangle']):
     """
+    Pair of two points (start |upleft|, end |downright|)
+
     .. include:: ../shared/wrapper/component.rst
     """
     _DEFAULT_RAW = const.ZERO_RECT
@@ -218,23 +231,35 @@ class RectangleWrapper(_utils.WrappedField['types.Rectangle']):
 
 class SourceRectangleWrapper(RectangleWrapper):
     """
+    Source area, to get origin pixels from
+
     .. include:: ../shared/wrapper/head.rst
     """
     _DEFAULT_RAW = const.DEFAULT_SOURCE
 
 
 class ColorMatrixWrapper(_utils.WrappedField['types.ColorMatrix']):
-    """.. include:: ../shared/wrapper/common.rst"""
+    """
+    Use for apply color transformations
+
+    .. include:: ../shared/wrapper/common.rst
+    """
     _DEFAULT_RAW = const.DEFAULT_COLOR_EFFECT
 
 
 class FiltersListWrapper(_utils.WrappedField[tuple]):
-    """.. include:: ../shared/wrapper/common.rst"""
+    """
+    Window filtration list
+
+    .. include:: ../shared/wrapper/common.rst
+    """
     _DEFAULT_RAW = const.DEFAULT_FILTERS_LIST
 
 
 class FullscreenTransformWrapper(_utils.WrappedField['types.FullscreenTransform']):
     """
+    Scale/offset fullscreen magnifier transformations
+
     .. include:: ../shared/wrapper/head.rst
     """
     _DEFAULT_RAW = const.DEFAULT_FULLSCREEN_TRANSFORM
@@ -267,6 +292,8 @@ class FullscreenTransformWrapper(_utils.WrappedField['types.FullscreenTransform'
 
 class InputTransformWrapper(_utils.WrappedField['types.InputTransform']):
     """
+    Input transformation for pen and touch input
+
     .. include:: ../shared/wrapper/head.rst
     """
     _DEFAULT_RAW = const.DEFAULT_INPUT_TRANSFORM
@@ -305,7 +332,11 @@ class InputTransformWrapper(_utils.WrappedField['types.InputTransform']):
 
 
 class TransformationMatrixWrapper(_utils.WrappedField['types.TransformationMatrix']):
-    """.. include:: ../shared/wrapper/head.rst"""
+    """
+    Scale/offset magnifier transformations
+
+    .. include:: ../shared/wrapper/head.rst
+    """
     _DEFAULT_RAW = const.DEFAULT_TRANSFORM
 
     def __init__(
@@ -349,6 +380,9 @@ class TransformationMatrixWrapper(_utils.WrappedField['types.TransformationMatri
 
 
 class FullscreenController:
+    """
+    Gives access to fullscreen functions of Magnification API
+    """
     def __init__(self):
         self._cursor_visible = True
         self._transform = FullscreenTransformWrapper(
@@ -398,8 +432,10 @@ class FullscreenController:
     def cursor_visible(self) -> bool:
         """
         | Cursor shown/hidden state
+
         .. note::
            Doesn't reflect actual value, shows last used value instead
+
         | |accessors: get set|
         """
         return self._cursor_visible
@@ -411,6 +447,10 @@ class FullscreenController:
 
 
 class CustomWindowController:
+    """
+    Gives access to window (custom magnifier controller)
+    functions of Magnification API
+    """
     def __init__(self):
         self.hwnd: int = 0
         """
@@ -480,7 +520,8 @@ class CustomWindowController:
 
 class WinMagnificationAPI:
     """
-    Object-Oriented wrapper for Magnification API
+    | :mod:`Object-Oriented wrapper <win_magnification._objects>` for Magnification API
+    | Also manages :func:`.initialize` and :func:`.finalize` calls
 
     .. automethod:: __del__
     """
@@ -520,6 +561,6 @@ class WinMagnificationAPI:
 
     def __del__(self):
         """
-        Calls :meth:`.WinMagnificationAPI.dispose` on object distraction
+        Calls :meth:`.dispose` on object distraction
         """
         self.dispose()

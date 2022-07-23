@@ -61,8 +61,8 @@ TransformationMatrix: typing.TypeAlias = typing.Tuple[
    0.0 0.0 1.0
    === === ===
 
-   | **X** Offset from left to right
-   | **Y** Offset from up to down
+   | **X** Offset from left to right |right|
+   | **Y** Offset from up to down |down|
    | Where (0, 0) is |upleft| upper-left corner of magnifier window
 """
 

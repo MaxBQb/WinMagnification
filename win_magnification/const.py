@@ -232,7 +232,7 @@ Default rectangle of zeros
 :type: :data:`.RectangleRaw`
 """
 
-DEFAULT_FILTERS_LIST = tuple()
+DEFAULT_FILTERS_LIST: tuple = tuple()
 """
 Default empty list of filters for magnifier to **exclude**/include 
 """

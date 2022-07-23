@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import contextlib
 import ctypes
+import ctypes.wintypes
 import functools
 import threading
 import typing
@@ -24,9 +25,9 @@ def handle_win_last_error(function_result: bool):
         raise ctypes.WinError()
 
 
-def raise_win_errors(win_function: typing.Callable[P, bool]) -> typing.Callable[P, None]:
+def raise_win_errors(win_function: typing.Callable[P, bool]) -> typing.Callable[P, None]:  # type: ignore
     @functools.wraps(win_function)
-    def wrapper(*args: 'P.args', **kwargs: 'P.kwargs') -> None:
+    def wrapper(*args: 'P.args', **kwargs: 'P.kwargs') -> None:  # type: ignore
         handle_win_last_error(win_function(*args, **kwargs))
     return wrapper
 

@@ -90,7 +90,7 @@ WinEventHandler = typing.Callable[['AbstractWindow'], None]
 class AbstractWindow(metaclass=abc.ABCMeta):
     window_class: int = 0
     window_class_name = "Py_MyAbstractWindowClass"
-    windows: typing.Dict[int, 'AbstractWindow'] = weakref.WeakValueDictionary()
+    windows: typing.Dict[int, 'AbstractWindow'] = weakref.WeakValueDictionary()  # type: ignore
     events: typing.Dict[int, typing.Callable[[int, int, int, int], None]] = dict()
     # noinspection SpellCheckingInspection
     hinst = win32api.GetModuleHandle()
@@ -209,7 +209,8 @@ class BasicWindow(AbstractWindow, abc.ABC):
         self._window_started_event.wait(timeout)
 
     def wait_window_stop(self, timeout: float = None):
-        self._thread.join(timeout)
+        if self._thread:
+            self._thread.join(timeout)
 
     @property
     def fullscreen_mode(self):

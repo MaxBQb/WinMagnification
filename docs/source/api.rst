@@ -1,5 +1,5 @@
-Lib docs
-========
+API Description
+===============
 
 .. autosummary::
    :toctree: generated/
