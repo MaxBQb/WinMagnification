@@ -12,18 +12,20 @@
 #
 import os
 import sys
+import toml
 sys.path.insert(0, os.path.abspath(os.path.join('..', '..')))
 
 
 # -- Project information -----------------------------------------------------
+metadata = toml.load(os.path.normpath('../../pyproject.toml'))
 
-project = 'WinMagnification'
+project = metadata['project']['name']
+author = metadata['project']['authors'][0]['name']
 # noinspection PyShadowingBuiltins
-copyright = '2022, MaxBQb'
-author = 'MaxBQb'
+copyright = f'2022, {author}'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.1'
+release = metadata['project']['version']
 
 
 # -- General configuration ---------------------------------------------------
@@ -47,8 +49,8 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
 ]
-github_username = 'MaxBQb'
-github_repository = 'WinMagnification'
+github_username = author
+github_repository = project
 add_module_names = False
 hoverxref_auto_ref = True
 hoverxref_domains = ['py']

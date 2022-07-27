@@ -1,6 +1,6 @@
 [project]
 name = "WinMagnification"
-version = "0.0.1"
+version = "0.1.0"
 authors = [
   { name="MaxBQb" },
 ]
@@ -22,7 +22,7 @@ classifiers = [
 [project.urls]
 "Homepage" = "https://github.com/MaxBQb/WinMagnification"
 "Bug Tracker" = "https://github.com/MaxBQb/WinMagnification/issues"
-"Documentation" = "https://winmagnification.readthedocs.io/en/latest/",
+"Documentation" = "https://winmagnification.readthedocs.io/en/latest/"
 
 [build-system]
 requires = ["setuptools>=61.0"]
