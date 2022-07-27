@@ -36,6 +36,7 @@ extensions = [
     'sphinx.ext.duration',
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
+    'hoverxref.extension',  # https://sphinx-hoverxref.readthedocs.io/en/latest/
     'sphinx_design',  # https://sphinx-design.readthedocs.io/en/rtd-theme/badges_buttons.html
     'sphinx.ext.viewcode',
     'sphinx_tabs.tabs',
@@ -49,6 +50,8 @@ extensions = [
 github_username = 'MaxBQb'
 github_repository = 'WinMagnification'
 add_module_names = False
+hoverxref_auto_ref = True
+hoverxref_domains = ['py']
 autodoc_typehints = 'signature'
 # noinspection SpellCheckingInspection
 intersphinx_mapping = {
