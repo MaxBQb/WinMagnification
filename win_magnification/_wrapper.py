@@ -38,6 +38,8 @@ _PMAGTRANSFORM = ctypes.POINTER(_MAGTRANSFORM)
 def initialize() -> None:
     """
     Creates and initializes the magnifier run-time objects.
+
+    :raises OSError: On fail
     """
     return _DLL.MagInitialize()
 
@@ -46,6 +48,8 @@ def initialize() -> None:
 def finalize() -> None:
     """
     Destroys the magnifier run-time objects.
+
+    :raises OSError: On fail
     """
     return _DLL.MagUninitialize()
 
@@ -58,6 +62,8 @@ def set_fullscreen_color_effect(effect: types.ColorMatrix) -> None:
 
     :param effect: The new color transformation matrix.
     :type effect: :data:`.ColorMatrix`
+    :raises OSError: On fail
+    :raises RuntimeError: |single thread|
     """
     return _DLL.MagSetFullscreenColorEffect(_utils.to_c_array(effect))
 
@@ -70,6 +76,8 @@ def get_fullscreen_color_effect() -> types.ColorMatrix:
     :return: The color transformation matrix, or the identity matrix (:data:`.COLOR_NO_EFFECT`)
         if no color effect has been set.
     :rtype: :data:`.ColorMatrix`
+    :raises OSError: On fail
+    :raises RuntimeError: |single thread|
     """
     result = _utils.to_c_array((0,) * const.COLOR_MATRIX_SIZE)
     _utils.handle_win_last_error(_DLL.MagGetFullscreenColorEffect(result))
@@ -87,6 +95,8 @@ def set_fullscreen_transform(scale: float, offset: typing.Tuple[int, int]) -> No
     :param offset:
         The offset is relative to the |up-left| upper-left corner of the primary monitor, in unmagnified coordinates.
         -262144 <= (x, y) <= 262144.
+    :raises OSError: On fail
+    :raises RuntimeError: |single thread|
     """
     return _DLL.MagSetFullscreenTransform(scale, *offset)
 
@@ -98,6 +108,8 @@ def get_fullscreen_transform() -> types.FullscreenTransform:
 
     :return: Tuple of current **magnification factor** and **offset**
     :rtype: :data:`.FullscreenTransformRaw`
+    :raises OSError: On fail
+    :raises RuntimeError: |single thread|
     """
     scale = ctypes.pointer(ctypes.c_float())
     offset_x = ctypes.pointer(ctypes.c_int())
@@ -120,6 +132,7 @@ def set_color_effect(hwnd: int, effect: typing.Optional[types.ColorMatrix]) -> N
     :param hwnd: The handle of the magnification window.
     :param effect: The color transformation matrix, or None to remove the current color effect, if any.
     :type effect: :data:`.ColorMatrix`
+    :raises OSError: On fail
     """
     return _DLL.MagSetColorEffect(
         hwnd,
@@ -136,6 +149,7 @@ def get_color_effect(hwnd: int) -> types.ColorMatrix:
     :param hwnd: The handle of the magnification window.
     :return: Current color transformation matrix.
     :rtype: :data:`.ColorMatrix`
+    :raises OSError: On fail
     """
     result = _utils.to_c_array((0,) * const.COLOR_MATRIX_SIZE)
     _utils.handle_win_last_error(_DLL.MagGetColorEffect(hwnd, result))
@@ -152,6 +166,7 @@ def set_transform(hwnd: int, matrix: types.TransformationMatrix) -> None:
     :param hwnd: The handle of the magnification window.
     :param matrix: A 3x3 matrix of the magnification transformation
     :type matrix: :data:`.TransformationMatrix`
+    :raises OSError: On fail
     """
     return _DLL.MagSetWindowTransform(hwnd, _utils.to_c_array(matrix))
 
@@ -163,6 +178,7 @@ def get_transform(hwnd: int) -> types.TransformationMatrix:
     :param hwnd: The handle of the magnification window.
     :return: A 3x3 matrix of the magnification transformation.
     :rtype: :data:`.TransformationMatrix`
+    :raises OSError: On fail
     """
     result = _utils.to_c_array((0,) * const.TRANSFORMATION_MATRIX_SIZE)
     _utils.handle_win_last_error(_DLL.MagGetWindowTransform(hwnd, result))
@@ -179,6 +195,7 @@ def set_source(hwnd: int, rectangle: types.Rectangle) -> None:
     :param hwnd: The handle of the magnification window.
     :param rectangle: Magnification rectangle
     :type rectangle: :data:`.RectangleRaw`
+    :raises OSError: On fail
     """
     return _DLL.MagSetWindowSource(hwnd, wintypes.RECT(*rectangle))
 
@@ -190,6 +207,7 @@ def get_source(hwnd: int) -> types.Rectangle:
     :param hwnd: The handle of the magnification window.
     :return: Magnification rectangle
     :rtype: :data:`.RectangleRaw`
+    :raises OSError: On fail
     """
     result = ctypes.pointer(wintypes.RECT(0, 0, 0, 0))
     _utils.handle_win_last_error(_DLL.MagGetWindowSource(hwnd, result))
@@ -207,6 +225,7 @@ def set_filters(root_hwnd: int, *hwnds: int, exclude=True) -> None:
     :param root_hwnd: The handle of the magnification window.
     :param exclude: The magnification filter mode.
     :param hwnds: List of window handles.
+    :raises OSError: On fail
     """
     return _DLL.MagSetWindowFilterList(
         root_hwnd,
@@ -222,6 +241,8 @@ def get_filters(hwnd: int) -> typing.Tuple[bool, typing.Tuple[int]]:
 
     :param hwnd: The handle of the magnification window.
     :return: The filter mode and the list of window handles.
+    :raises OSError: On fail
+    :raises RuntimeError: On invalid hwnd used
     """
     exclude = ctypes.pointer(wintypes.DWORD())
     count = _DLL.MagGetWindowFilterList(hwnd, exclude, 0, None)
@@ -257,6 +278,7 @@ def set_input_transform(is_enabled: bool, source: types.Rectangle, destination: 
         Pen and touch input in this rectangle is mapped to the source rectangle.
         This parameter is ignored if **is_enabled** is False.
     :type destination: :data:`.RectangleRaw`
+    :raises OSError: On fail
     """
     return _DLL.MagSetInputTransform(
         is_enabled,
@@ -272,6 +294,7 @@ def get_input_transform() -> types.InputTransform:
 
     :return: Tuple of **is_enabled**, **source** and **destination**
     :rtype: :data:`.InputTransformRaw`
+    :raises OSError: On fail
     """
     is_enabled = ctypes.pointer(wintypes.BOOL())
     source = ctypes.pointer(wintypes.RECT())
@@ -295,6 +318,7 @@ def set_cursor_visibility(show_cursor: bool):
 
     :param show_cursor: True to show the system cursor,
         or False to hide it.
+    :raises OSError: On fail
     """
     return _DLL.MagShowSystemCursor(show_cursor)
 

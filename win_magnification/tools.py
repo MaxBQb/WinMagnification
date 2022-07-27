@@ -284,6 +284,7 @@ def combine_matrices(first: Matrix.Linear, second: Matrix.Linear):
     :param first: Matrix A
     :param second: Matrix B
     :return: A*B
+    :raises ValueError: On matrices sizes mismatch
     """
     if len(first) != len(second):
         raise ValueError("Matrices must be the same size!")
@@ -400,6 +401,8 @@ class Matrix:
         Expected 4, got 5
 
         | |Accessors: Get Set|
+
+        :raises ValueError: On size of new linear matrix musmatch the old one
         """
         return self._value
 
@@ -468,6 +471,8 @@ class Matrix:
         Traceback (most recent call last):
         ...
         TypeError: Can't multiply matrix and 'str'
+
+        :raises TypeError: When unable to convert operand
         """
         matrix = self.from_any(other)
         if matrix is None:
@@ -516,6 +521,8 @@ class Matrix:
         Traceback (most recent call last):
         ...
         TypeError: Can't add 'str' to matrix
+
+        :raises TypeError: When unable to convert operand
         """
         if isinstance(other, (int, float)):
             other = get_filled_matrix(float(other), self._size)
@@ -542,6 +549,8 @@ class Matrix:
         Traceback (most recent call last):
         ...
         TypeError: Can't subtract 'str' from matrix
+
+        :raises TypeError: When unable to convert operand
         """
         if isinstance(other, (int, float)):
             other = get_filled_matrix(float(other), self._size)

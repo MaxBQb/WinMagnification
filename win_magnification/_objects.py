@@ -334,6 +334,7 @@ class ColorMatrixWrapper(MatrixWrapper['types.ColorMatrix']):
         :param initial_power: Float scale of transition
             normally stays between :abbr:`0 (start)` and :abbr:`1 (end)` to get transition effect
             (default: last value used or 0)
+        :raises TypeError: If params conversion fails
         """
         if start is None:
             start = self

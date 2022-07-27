@@ -105,6 +105,7 @@ rst_prolog = """
 .. |down| replace:: :octicon:`arrow-down;1em;sd-text-success`
 .. |left| replace:: :octicon:`arrow-left;1em;sd-text-success`
 .. |right| replace:: :octicon:`arrow-right;1em;sd-text-success`
+.. |single thread| replace:: On call from thead other than the first one, where :func:`.initialize` was called
 .. |accessor getter| replace:: :octicon:`eye;1em;sd-text-warning` :bdg-link-warning:`Get <https://docs.python.org/3/library/functions.html#getattr>`
 .. |accessor setter| replace:: :octicon:`pencil;1em;sd-text-success` :bdg-link-success:`Set <https://docs.python.org/3/library/functions.html#setattr>`
 .. |accessor deleter| replace:: :octicon:`trash;1em;sd-text-danger` :bdg-link-danger:`Delete <https://docs.python.org/3/library/functions.html#delattr>`
