@@ -1,20 +1,23 @@
-from . import *
+"""
+Functions with winapi-style names
+"""
+import win_magnification as mag
 
-MagInitialize = initialize
+MagInitialize = mag.initialize
 # noinspection SpellCheckingInspection
-MagUninitialize = finalize
-MagGetFullscreenColorEffect = get_fullscreen_color_effect
-MagSetFullscreenColorEffect = set_fullscreen_color_effect
-MagSetFullscreenTransform = set_fullscreen_transform
-MagGetFullscreenTransform = get_fullscreen_transform
-MagSetColorEffect = set_color_effect
-MagGetColorEffect = get_color_effect
-MagSetWindowTransform = set_transform
-MagGetWindowTransform = get_transform
-MagSetWindowSource = set_source
-MagGetWindowSource = get_source
-MagSetWindowFilterList = set_filters
-MagGetWindowFilterList = get_filters
-MagGetInputTransform = get_input_transform
-MagSetInputTransform = set_input_transform
-MagShowSystemCursor = set_cursor_visibility
+MagUninitialize = mag.finalize
+MagGetFullscreenColorEffect = mag.get_fullscreen_color_effect
+MagSetFullscreenColorEffect = mag.set_fullscreen_color_effect
+MagSetFullscreenTransform = mag.set_fullscreen_transform
+MagGetFullscreenTransform = mag.get_fullscreen_transform
+MagSetColorEffect = mag.set_color_effect
+MagGetColorEffect = mag.get_color_effect
+MagSetWindowTransform = mag.set_transform_advanced
+MagGetWindowTransform = mag.get_transform_advanced
+MagSetWindowSource = mag.set_source
+MagGetWindowSource = mag.get_source
+MagSetWindowFilterList = mag.set_filters
+MagGetWindowFilterList = mag.get_filters
+MagGetInputTransform = mag.get_input_transform
+MagSetInputTransform = mag.set_input_transform
+MagShowSystemCursor = mag.set_cursor_visibility

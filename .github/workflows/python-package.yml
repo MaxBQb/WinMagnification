@@ -8,6 +8,8 @@ on:
     branches: [ "master", "CI-Test" ]
     paths:
       - 'win_magnification/**'
+      - 'example/windows_utils'
+      - 'tests/**'
       - '.github/workflows/python-package.yml'
   pull_request:
     branches: [ "master" ]

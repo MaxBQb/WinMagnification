@@ -1,5 +1,11 @@
-import abc
+"""
+| Internal module
+"""
+
+from __future__ import annotations
+
 import contextlib
+import inspect
 import threading
 import typing
 
@@ -7,36 +13,80 @@ _PropertiesObserverType = typing.TypeVar('_PropertiesObserverType', bound='Prope
 
 
 class PropertiesObserver:
+    """
+    | Usage example:
+    >>> class MyPropertiesObserver(PropertiesObserver):
+    ...     def __init__(self):
+    ...         self.property1 = 10
+    ...         self.property2 = 10
+    ...         super().__init__()
+    ...
+    >>> property_observer = MyPropertiesObserver()
+    >>> property_observer.subscribe(lambda *_: print('update'))
+    >>> with property_observer.batch() as value:
+    ...     value.property1 += 1  # or property_observer.property1 += 1
+    ...     value.property2 -= 1  # or property_observer.property2 -= 1
+    update
+    >>> property_observer.property1 += 1; property_observer.property2 -= 1
+    update
+    update
+    """
+
     def __init__(self):
         self._ignored_changes = set()
+        self._all_changes_ignored = False
+        self._inner_observables = set()
         self._is_property = False
         self._observers = set()
         self._locks: typing.Dict[str, threading.RLock] = dict()
-        self._batching_changes = 0
+        self._has_changes = False
+        self._batching_changes = False
         self._subscribe_initial()
 
     def _subscribe_initial(self):
-        for name, value in vars(self).items():
-            if self.__is_property_observed(name):
-                self.__subscribe_property(name, value)
+        for name, value in self._properties_observed.items():
+            self.__subscribe_property(name, value)
+
+    @property
+    def _properties_observed(self):
+        return {
+            key: value for key, value in vars(self).items() if self.__is_property_observed(key)
+        }
 
     def __is_property_observed(self, name: str):
-        return (
-                not name.startswith('_') and
-                name not in self._ignored_changes and
-                vars(self).get(name)
-        )
+        if self._all_changes_ignored or name in self._ignored_changes:
+            return False
+
+        if not (name in self._inner_observables or
+                not name.startswith('_')):
+            return False
+
+        prop = getattr(type(self), name, None)
+        return not prop or not inspect.isdatadescriptor(prop)
 
     @contextlib.contextmanager
-    def _ignore_changes(self, name: str):
-        self._ignored_changes.add(name)
+    def _ignore_changes(self, *names: str):
+        for name in names:
+            self._ignored_changes.add(name)
         try:
             yield
         finally:
-            self._ignored_changes.remove(name)
+            for name in names:
+                self._ignored_changes.remove(name)
+
+    @contextlib.contextmanager
+    def _ignore_all_changes(self):
+        if self._all_changes_ignored:
+            yield
+            return
+        self._all_changes_ignored = True
+        try:
+            yield
+        finally:
+            self._all_changes_ignored = False
 
     def __setattr__(self, name: str, value):
-        notify = hasattr(self, "_ignored_changes") and \
+        notify = hasattr(self, "_observers") and \
                  self.__is_property_observed(name)
         if notify:
             self._locks.setdefault(name, threading.RLock())
@@ -61,107 +111,263 @@ class PropertiesObserver:
             on_change()
 
     def subscribe(self, on_change: typing.Callable):
+        """
+        | The **on_change** functions will be called when
+          a class property changes *(mostly for internal use)*
+        | See example :class:`above <PropertiesObserver>`
+
+        :param on_change: Function to call
+        """
         self._observers.add(on_change)
 
     def _on_property_changed(self, name: str, value):
         self.__subscribe_property(name, value)
         if not self._batching_changes:
-            self._on_change()
+            if not self._all_changes_ignored:
+                self._on_change()
+        else:
+            self._has_changes = True
 
     @contextlib.contextmanager
     def batch(self: _PropertiesObserverType):
         """
-        Use to apply changes at once
-
-        with property_observer.batch() as value:
-            value.property1 += 1
-            value.property2 -= 1
+        | Use this *contextmanager* to apply changes at once
+        | See example :class:`above <PropertiesObserver>`
         """
-        self._batching_changes += 1
+        if self._batching_changes:
+            yield self
+            return
+        self._has_changes = False
+        self._batching_changes = True
         try:
             yield self
         finally:
-            self._batching_changes -= 1
-        if not self._batching_changes:
-            self._on_change()
+            self._batching_changes = False
+            if self._has_changes:
+                self._on_change()
 
 
-_T = typing.TypeVar('_T')
-_FieldWrapperType = typing.TypeVar('_FieldWrapperType', bound='FieldWrapper')
+T = typing.TypeVar('T')
+TSource = typing.Callable[[], T]
+TSetter = typing.Callable[[T], None]
 
 
-class FieldWrapper(typing.Generic[_T], metaclass=abc.ABCMeta):
+class DataSource(typing.Generic[T]):
+    """
+    Wraps interaction with outer world data sources
+    """
+
+    def __init__(self):
+        self.use_cache: bool = False
+        """
+        | Save last value or get fresh one each time?
+        | |Accessors: Get Set|
+        """
+        self._has_cache = False
+        self._cache: T = None
+
+    def source(self) -> T:
+        """Overridable method of getting fresh data"""
+
+    def setter(self, value: T) -> None:
+        """Overridable method of updating data"""
+
+    @property
+    def has_cache(self) -> bool:
+        """
+        | True if last value saved, and it should be used instead of getting fresh one
+        | |Accessors: Get|
+        """
+        return self._has_cache and self.use_cache
+
+    @property
+    def data(self) -> T:
+        """
+        | Value from datasource
+        | When :attr:`.use_cache` enabled stores and reuses the last value retrieved
+        | |Accessors: Get Set|
+        """
+        if self.use_cache:
+            if not self._has_cache:
+                self._cache = self.source()
+                self._has_cache = True
+            return self._cache
+        return self.source()
+
+    @data.setter
+    def data(self, value: T):
+        self._has_cache = False
+        self.setter(value)
+
     @classmethod
-    @abc.abstractmethod
-    def wrap(cls: typing.Type[_FieldWrapperType], value: _T) -> _FieldWrapperType:
-        pass
+    def dynamic(cls: typing.Type[WrappedFieldType], source: TSource, setter: TSetter) -> WrappedFieldType:
+        """
+        Creates :class:`DataSource` with source/setter specified
 
-    @property
-    @abc.abstractmethod
-    def raw(self) -> _T:
-        pass
+        :param source: New method of getting fresh data
+        :param setter: New method of updating data
+        :return: New DataSource
+        """
+        result = cls()
+        result.source = source
+        result.setter = setter
+        return result
+
+    @classmethod
+    def const(cls: typing.Type[WrappedFieldType], value: T) -> WrappedFieldType:
+        """
+        Creates :class:`DataSource` which constantly returns
+        the same value, that can't be changed
+
+        :param value: Const to retrieve
+        :return: New DataSource
+        """
+        return cls.dynamic(
+            lambda: value,
+            lambda: None,
+        )
 
 
-class ObservableWrapper(PropertiesObserver, FieldWrapper[_T], abc.ABC):
-    pass
+WrappedFieldType = typing.TypeVar('WrappedFieldType', bound='WrappedField')  #: Any child of :class:`WrappedField`
 
 
-class CompositeField(typing.Generic[_T]):
+class WrappedField(PropertiesObserver, typing.Generic[T]):
+    """
+    | Allows to get/set/get default/reset value of field wrapped
+    | Mostly used to allow selective changes of complex fields
+    """
+    _DEFAULT_RAW: T
+    _DEFAULT: WrappedFieldType  # type: ignore
+
     def __init__(
-        self,
-        source: typing.Callable[[], _T],
-        setter: typing.Callable[[_T], None],
-        default: _T,
+            self,
+            datasource: typing.Optional[DataSource[T]] = None
     ):
-        self._source = source
-        self._setter = setter
-        self._default = default
+        self._source_dependent = set()
+
+        def set_value(x: T):
+            with self.batch():
+                self._raw = x
+
+        def get_value() -> T:
+            with self._ignore_all_changes():
+                return self._raw
+
+        self._datasource = datasource or DataSource.dynamic(
+            get_value,
+            set_value,
+        )
+        super().__init__()
+
+        def set_raw():
+            with self._ignore_all_changes():
+                self.raw = self._raw
+
+        self.subscribe(set_raw)
+
+    def _subscribe_initial(self):
+        super()._subscribe_initial()
+        self._source_dependent = set(self._properties_observed)
+
+    def __getattribute__(self, item):
+        if item != '_source_dependent' and \
+                item != '_all_changes_ignored' and \
+                hasattr(self, '_source_dependent') and \
+                not getattr(self, '_all_changes_ignored', True) and \
+                item in getattr(self, '_source_dependent'):
+            self._read_all()
+        return super().__getattribute__(item)
+
+    def __setattr__(self, key, value):
+        if hasattr(self, '_source_dependent') and \
+                key in getattr(self, '_source_dependent'):
+            if not self._all_changes_ignored:
+                self._read_all()
+            if isinstance(value, WrappedField):
+                try:
+                    field: WrappedField = getattr(self, key)
+                    field.raw = value.raw
+                    return
+                except AttributeError:
+                    pass
+        super().__setattr__(key, value)
+
+    def __delattr__(self, item):
+        if item in self._source_dependent:
+            setattr(self, item, getattr(self.default, item))
+        else:
+            return super().__delattr__(item)
 
     @property
-    def default(self) -> _T:
-        return self._default
+    def _raw(self) -> T:
+        return None  # type: ignore
+
+    @_raw.setter
+    def _raw(self, value: T):
+        pass
+
+    def _read_all(self):
+        if not self._datasource.has_cache:
+            with self._ignore_all_changes():
+                self._raw = self.raw
+
+    @contextlib.contextmanager
+    def batch(self: WrappedFieldType):
+        """
+        | Use this *contextmanager* to read/write fields at one shot
+        | See example in :class:`parent <PropertiesObserver>`
+        """
+        if self._batching_changes:
+            yield self
+            return
+        with super().batch():
+            self._datasource.use_cache = True
+            try:
+                yield self
+            finally:
+                self._datasource.use_cache = False
 
     @property
-    def raw(self) -> _T:
-        return self._source()
+    def default(self: WrappedFieldType) -> WrappedFieldType:
+        """
+        | Default value of wrapped field
+        | |Accessors: Get|
+        """
+        if not hasattr(self, '_DEFAULT'):
+            self.__class__._DEFAULT = self.__class__(
+                DataSource.const(self._DEFAULT_RAW)
+            )
+        return self._DEFAULT
+
+    def __eq__(self, other):
+        if isinstance(other, WrappedField):
+            return self.raw == other.raw
+        return super().__eq__(other)
+
+    @property
+    def raw(self) -> T:
+        """
+        | Raw value with no wrappers used
+        | |Accessors: Get Set Delete|
+        | **Deleter**: resets value with :attr:`.default`
+        """
+        return self._datasource.data
 
     @raw.setter
-    def raw(self, value: _T):
-        self._setter(value)
+    def raw(self, value: T):
+        self._datasource.data = value
 
     @raw.deleter
     def raw(self):
-        self.raw = self._default
+        self.raw = self._DEFAULT_RAW
 
     def reset(self):
+        """Resets value of wrapped field to :attr:`.default`"""
         del self.raw
 
 
-_E = typing.TypeVar('_E', bound=ObservableWrapper)
-
-
-class CompositeWrappedField(CompositeField[_T], typing.Generic[_T, _E]):
-    def __init__(
-        self,
-        wrapper: typing.Type[_E],
-        source: typing.Callable[[], _T],
-        setter: typing.Callable[[_T], None],
-        default: _T,
-    ):
-        super().__init__(source, setter, default)
-        self._wrapper: typing.Callable[[_T], _E] = wrapper.wrap
-        self._default_wrapped = self._wrapper(default)
-
-    @property
-    def default(self) -> _E:  # type: ignore
-        return self._default_wrapped
-
-    @property
-    def value(self) -> _E:
-        value = self._wrapper(self._source())
-        value.subscribe(lambda: self._setter(value.raw))
-        return value
-
-    @value.deleter
-    def value(self):
-        del self.raw
+def ensure_same(*values: T) -> typing.Optional[T]:
+    pattern = values[0]
+    if all(value == pattern for value in values):
+        return pattern
+    return None

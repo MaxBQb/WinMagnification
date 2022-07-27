@@ -1,10 +1,10 @@
+import abc
 import ctypes
 import functools
-import weakref
 import queue
 import threading
-import abc
 import typing
+import weakref
 
 import timer  # type: ignore
 import win32api  # type: ignore
@@ -19,7 +19,7 @@ import win_magnification as mag
 # https://github.com/microsoft/Windows-classic-samples/blob/main/Samples/Magnification/cpp/Windowed/MagnifierSample.cpp
 
 
-def make_partial_screen(hwnd, rectangle: mag.types.RectangleRaw):
+def make_partial_screen(hwnd, rectangle: mag.types.Rectangle):
     win32gui.SetWindowLong(
         hwnd,
         win32con.GWL_EXSTYLE,
@@ -45,7 +45,7 @@ def make_partial_screen(hwnd, rectangle: mag.types.RectangleRaw):
     )
 
 
-def get_fullscreen_size() -> mag.types.RectangleRaw:
+def get_fullscreen_size() -> mag.types.Rectangle:
     # Calculate the span of the display area.
     max_x = win32api.GetSystemMetrics(win32con.SM_CXSCREEN)
     max_y = win32api.GetSystemMetrics(win32con.SM_CYSCREEN)
@@ -55,7 +55,7 @@ def get_fullscreen_size() -> mag.types.RectangleRaw:
 
 
 # noinspection SpellCheckingInspection
-def make_fullscreen(hwnd, rectangle: mag.types.RectangleRaw):
+def make_fullscreen(hwnd, rectangle: mag.types.Rectangle):
     # The window must be styled as layered for proper rendering.
     # It is styled as transparent so that it does not capture mouse clicks.
     # For draw on top of TaskManager/System menus we need to use win10 zBand
@@ -90,13 +90,14 @@ WinEventHandler = typing.Callable[['AbstractWindow'], None]
 class AbstractWindow(metaclass=abc.ABCMeta):
     window_class: int = 0
     window_class_name = "Py_MyAbstractWindowClass"
-    windows: typing.Dict[int, 'AbstractWindow'] = weakref.WeakValueDictionary()
+    windows: typing.Dict[int, 'AbstractWindow'] = weakref.WeakValueDictionary()  # type: ignore
     events: typing.Dict[int, typing.Callable[[int, int, int, int], None]] = dict()
     # noinspection SpellCheckingInspection
     hinst = win32api.GetModuleHandle()
 
     def __init__(self):
-        self._thread: typing.Optional[int] = None
+        self._thread: typing.Optional[threading.Thread] = None
+        self._thread_id: typing.Optional[int] = None
         self._window_started_event = threading.Event()
         self._command = queue.Queue()
         self._result = queue.Queue()
@@ -104,12 +105,12 @@ class AbstractWindow(metaclass=abc.ABCMeta):
         self.position = (0, 0)
         self.size = (400, 400)
         # noinspection PyTypeChecker
-        self.rectangle: mag.types.RectangleRaw = (*self.position, *self.size)
-        self._fullscreen_rectangle: mag.types.RectangleRaw = (0, 0, 200, 200)
+        self.rectangle: mag.types.Rectangle = (*self.position, *self.size)
+        self._fullscreen_rectangle: mag.types.Rectangle = (0, 0, 200, 200)
         self._fullscreen_mode = False
 
     @property
-    def rectangle(self) -> mag.types.RectangleRaw:
+    def rectangle(self) -> mag.types.Rectangle:
         # noinspection PyTypeChecker
         return *self.position, *self.size  # type: ignore
 
@@ -125,7 +126,7 @@ class AbstractWindow(metaclass=abc.ABCMeta):
     def create_window(self):
         if self.is_alive:
             raise RuntimeError("Magnification window is already running")
-        self._thread = win32api.GetCurrentThreadId()
+        self._thread_id = win32api.GetCurrentThreadId()
         # Note: Without Dpi setting magnifier image quality is low and creepy
         ctypes.windll.shcore.SetProcessDpiAwareness(2)
         self._register_window_class()
@@ -204,8 +205,12 @@ class BasicWindow(AbstractWindow, abc.ABC):
     def _on_destroy(self):
         self._close()
 
-    def wait_window_start(self, timeout=None):
+    def wait_window_start(self, timeout: float = None):
         self._window_started_event.wait(timeout)
+
+    def wait_window_stop(self, timeout: float = None):
+        if self._thread:
+            self._thread.join(timeout)
 
     @property
     def fullscreen_mode(self):
@@ -222,7 +227,7 @@ class BasicWindow(AbstractWindow, abc.ABC):
                 self._execute(make_partial_screen, self.hwnd, self.rectangle)
 
     def _execute(self, command: typing.Callable, *args, **kwargs):
-        if self._thread == win32api.GetCurrentThreadId():
+        if self._thread_id == win32api.GetCurrentThreadId():
             return command(*args, **kwargs)
         else:
             element = (command, args, kwargs)
@@ -235,6 +240,20 @@ class BasicWindow(AbstractWindow, abc.ABC):
         command, args, kwargs = self._command.get()
         result = command(*args, **kwargs)
         self._result.put(result)
+
+    def run(self):
+        def inner():
+            win32gui.InitCommonControls()
+            self.create_window()
+            win32gui.PumpMessages()
+            self._after_close()
+
+        self._thread = threading.Thread(target=inner)
+        self._thread.start()
+        self.wait_window_start()
+
+    def _after_close(self):
+        pass
 
 
 class MagnifierWindow(BasicWindow):
@@ -290,7 +309,7 @@ class MagnifierWindow(BasicWindow):
         super()._close()
         self.magnifier_hwnd = None
 
-    def after_close(self):
+    def _after_close(self):
         """Call this method after PumpMessages"""
         self.__magnifier.dispose()
 
@@ -330,16 +349,3 @@ class MagnifierWindow(BasicWindow):
             win32con.SWP_NOMOVE |
             win32con.SWP_NOSIZE
         )
-
-
-def run_magnifier_window(window: MagnifierWindow) -> threading.Thread:
-    def inner():
-        win32gui.InitCommonControls()
-        window.create_window()
-        win32gui.PumpMessages()
-        window.after_close()
-
-    thread = threading.Thread(target=inner)
-    thread.start()
-    window.wait_window_start()
-    return thread

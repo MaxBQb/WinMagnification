@@ -1,3 +1,5 @@
+import doctest
+import inspect
 import threading
 import time
 import unittest
@@ -15,6 +17,13 @@ ALLOW_SLEEP = False  # TODO: Don't forget reset to False
 def delay_for_visualize(secs: float, apply=ALLOW_SLEEP):
     if apply:
         time.sleep(secs)
+
+
+# noinspection PyUnusedLocal
+def load_tests(loader, tests, ignore):
+    for name, module in inspect.getmembers(mag, inspect.ismodule):
+        tests.addTests(doctest.DocTestSuite(module))
+    return tests
 
 
 # noinspection PyMethodMayBeStatic
@@ -49,7 +58,7 @@ class NoControlWindowTest(unittest.TestCase):
         delay_for_visualize(1)
         self.magnifier.color_effect.reset()
         self.assertEqual(
-            self.magnifier.color_effect.raw,
+            self.magnifier.color_effect,
             self.magnifier.color_effect.default
         )
 
@@ -63,7 +72,7 @@ class NoControlWindowTest(unittest.TestCase):
         delay_for_visualize(1)
         del self.magnifier.transform.raw
         self.assertEqual(
-            self.magnifier.transform.value,
+            self.magnifier.transform,
             self.magnifier.transform.default,
         )
 
@@ -71,9 +80,10 @@ class NoControlWindowTest(unittest.TestCase):
         max_scale = 10
         step = 1
         default_scale, (start_x, start_y) = self.magnifier.transform.default.raw
-        del self.magnifier.transform.value
+        self.magnifier.transform.offset = self.magnifier.transform.offset
+        self.magnifier.transform.reset()
         for i in range(max_scale):
-            with self.magnifier.transform.value.batch() as transform:
+            with self.magnifier.transform.batch() as transform:
                 transform.scale += step
                 transform.offset.x += 2 * step
                 transform.offset.y += 3 * step
@@ -87,25 +97,25 @@ class NoControlWindowTest(unittest.TestCase):
         )
 
         delay_for_visualize(1)
-        self.magnifier.transform.value.scale = 1
-        self.magnifier.transform.value.offset.raw = (150, 200)
-        self.assertEqual(self.magnifier.transform.value.offset.raw, (150, 200))
+        self.magnifier.transform.scale = 1
+        self.magnifier.transform.offset.raw = (150, 200)
+        self.assertEqual(self.magnifier.transform.offset.raw, (150, 200))
 
         delay_for_visualize(1)
         offset = 15
-        self.magnifier.transform.value.offset.same = offset
-        self.assertEqual(self.magnifier.transform.value.offset.x, offset)
-        self.assertEqual(self.magnifier.transform.value.offset.y, offset)
-        self.assertEqual(self.magnifier.transform.value.offset.same, offset)
+        self.magnifier.transform.offset.same = offset
+        self.assertEqual(self.magnifier.transform.offset.x, offset)
+        self.assertEqual(self.magnifier.transform.offset.y, offset)
+        self.assertEqual(self.magnifier.transform.offset.same, offset)
 
-        with self.magnifier.transform.value.batch() as transform:
-            transform.offset = self.magnifier.transform.default.offset
-            transform.scale = self.magnifier.transform.default.scale
-            transform.scale = 2
+        with self.magnifier.transform.batch() as transform:
+            del transform.offset
+            del transform.scale
+            transform.transform = 2
 
-        self.assertEqual(self.magnifier.transform.value.offset.raw,
+        self.assertEqual(self.magnifier.transform.offset.raw,
                          self.magnifier.transform.default.offset.raw)
-        self.assertEqual(self.magnifier.transform.value.scale, 2)
+        self.assertEqual(self.magnifier.transform.transform, 2)
 
         self.magnifier.transform.reset()
         self.assertEqual(
@@ -114,13 +124,32 @@ class NoControlWindowTest(unittest.TestCase):
         )
 
     def test_idempotent(self):
-        last = self.magnifier.transform.value
+        last = self.magnifier.transform
         self.magnifier.transform.raw = last.raw
         self.assertEqual(self.magnifier.transform.raw, last.raw)
 
     def test_gradation(self):
-        for i in range(100+1):
-            self.magnifier.color_effect.raw = mag.tools.get_color_matrix_inversion(i/100.0)
+        for i in range(1, 100+1):
+            self.magnifier.color_effect.raw = mag.effects.inversion(i / 100.0)
+            delay_for_visualize(0.01)
+        self.assertEqual(self.magnifier.color_effect.raw, mag.const.COLOR_INVERSION_EFFECT)
+        delay_for_visualize(1)
+        with self.magnifier.color_effect.batch() as effect:
+            self.assertRaises(TypeError, effect.make_transition, end=mag.const.COLOR_NO_EFFECT, start=1)
+            self.assertRaises(TypeError, effect.make_transition, end=1)
+        self.magnifier.color_effect.make_transition(end=mag.const.COLOR_NO_EFFECT)
+        self.assertEqual(self.magnifier.color_effect.raw, mag.const.COLOR_INVERSION_EFFECT)
+        for i in range(100):
+            self.magnifier.color_effect.transition_power += 0.01
+            delay_for_visualize(0.01)
+        self.assertEqual(self.magnifier.color_effect.raw, mag.const.DEFAULT_COLOR_EFFECT)
+        delay_for_visualize(1)
+        with self.magnifier.color_effect.batch() as effect:
+            effect.from_transition(mag.effects.inversion, 0)
+            self.assertEqual(effect.transition, mag.effects.inversion)
+        self.assertEqual(self.magnifier.color_effect.raw, mag.const.DEFAULT_COLOR_EFFECT)
+        for i in range(100):
+            self.magnifier.color_effect.transition_power += 0.01
             delay_for_visualize(0.01)
         self.assertEqual(self.magnifier.color_effect.raw, mag.const.COLOR_INVERSION_EFFECT)
 
@@ -139,17 +168,15 @@ class NoControlWindowTest(unittest.TestCase):
         self.assertEqual(self.magnifier.input_transform.raw, self.magnifier.input_transform.default.raw)
         with suppress(OSError):
             self.magnifier.input_transform.raw = True, *rectangles
-            self.assertTrue(self.magnifier.input_transform.value.enabled)
-            self.assertEqual(self.magnifier.input_transform.value.source.raw, rectangles[0])
-            self.assertEqual(self.magnifier.input_transform.value.destination.raw, rectangles[1])
+            self.assertTrue(self.magnifier.input_transform.enabled)
+            self.assertEqual(self.magnifier.input_transform.source.raw, rectangles[0])
+            self.assertEqual(self.magnifier.input_transform.destination.raw, rectangles[1])
             self.assertEqual(self.magnifier.input_transform.raw, (True, *rectangles))
         with suppress(OSError):
-            with self.magnifier.input_transform.value.batch():
-                input_transform = self.magnifier.input_transform.value
-                default = self.magnifier.input_transform.default
-                input_transform.destination.raw = default.destination.raw
-                input_transform.source.raw = default.source.raw
-                input_transform.enabled = default.enabled
+            with self.magnifier.input_transform.batch() as input_transform:
+                del input_transform.destination
+                del input_transform.source
+                del input_transform.enabled
             self.assertEqual(self.magnifier.input_transform.raw, self.magnifier.input_transform.default.raw)
 
 
@@ -166,7 +193,7 @@ class NoControlWindowThreaded(unittest.TestCase):
                 delay_for_visualize(0.1)
                 color_effect.reset()
                 self.assertEqual(
-                    color_effect.raw,
+                    color_effect,
                     color_effect.default
                 )
             except Exception as e:
@@ -184,13 +211,12 @@ class NoControlWindowThreaded(unittest.TestCase):
 class MagnificationControlWindowTest(unittest.TestCase):
     def setUp(self):
         self.window = windows_utils.MagnifierWindow()
-        self.window_thread = windows_utils.run_magnifier_window(self.window)
+        self.window.run()
 
     def tearDown(self):
         self.window.close()
-        self.window_thread.join()
+        self.window.wait_window_stop()
         self.window = None
-        self.window_thread = None
 
     @property
     def magnifier(self):
@@ -207,46 +233,71 @@ class MagnificationControlWindowTest(unittest.TestCase):
 
     def test_effects(self):
         self.window.fullscreen_mode = True
-        scale = 1.5
-        self.magnifier.scale.value.same = scale
         self.magnifier.color_effect.raw = mag.const.COLOR_INVERSION_EFFECT
+        time.sleep(0.01)
         self.assertEqual(self.magnifier.source.raw, self.window.current_rectangle)
-        with self.magnifier.source.value.batch() as source:
+        with self.magnifier.source.batch() as source:
             source.same = -1
+            self.assertEqual(source.same, -1)
             source.start_same = 0
+            self.assertEqual(source.start_same, 0)
             source.end_same = 8
-            self.assertEqual(source.same, source.start_same)
+            self.assertEqual(source.same, None)
             self.assertEqual(source.right, source.end_same)
             self.assertEqual((0, 0), source.start)
             self.assertEqual((8, 8), source.end)
-        self.assertEqual(self.magnifier.scale.value.same, scale)
-        self.assertEqual(self.magnifier.scale.value.pair, (scale, scale))
         delay_for_visualize(1)
-        self.magnifier.scale.value.pair = scale, scale * 2
-        self.assertEqual(self.magnifier.scale.value.x, scale)
-        self.assertEqual(self.magnifier.scale.value.y, 2*scale)
         self.window.fullscreen_mode = False
-        delay_for_visualize(1)
-        self.magnifier.scale.reset()
-        self.assertEqual(self.magnifier.scale.value, self.magnifier.scale.default)
         self.assertEqual(self.magnifier.color_effect.raw, mag.const.COLOR_INVERSION_EFFECT)
         self.assertEqual(self.window.fullscreen_mode, False)
         delay_for_visualize(1)
-        mag.set_transform(self.window.magnifier_hwnd, scale)
-        self.assertEqual(self.magnifier.scale.value.pair, (scale, scale))
-        delay_for_visualize(1)
-        mag.set_transform(self.window.magnifier_hwnd, (scale, scale * 2))
-        self.assertEqual(self.magnifier.scale.value.pair, (scale, 2*scale))
         self.assertEqual(self.magnifier.color_effect.raw, mag.const.COLOR_INVERSION_EFFECT)
         self.magnifier.color_effect.reset()
-        self.assertEqual(self.magnifier.color_effect.raw, self.magnifier.color_effect.default)
+        self.assertEqual(self.magnifier.color_effect, self.magnifier.color_effect.default)
+
+    def test_transform(self):
+        scale = 1.5
+        self.magnifier.transform.scale.same = scale
+        self.assertEqual(self.magnifier.transform.scale.same, scale)
+        self.assertEqual(self.magnifier.transform.scale.raw, (scale, scale))
+        delay_for_visualize(1)
+        steps = 2
+        sub_steps = 1
+        for i in range(int(scale*steps)):
+            for j in range(i*sub_steps, (i+1)*sub_steps):
+                with self.magnifier.transform.batch() as transform:
+                    transform.scale.same += 1 / sub_steps
+                    transform.offset.same += 1
+                delay_for_visualize(0.01)
+        self.assertAlmostEqual(self.magnifier.transform.scale.same, scale * (steps+1), 4)
+        self.assertAlmostEqual(self.magnifier.transform.offset.x, scale*steps*sub_steps, 4)
+        self.assertAlmostEqual(self.magnifier.transform.offset.y, scale*steps*sub_steps, 4)
+        delay_for_visualize(1)
+        self.magnifier.transform.scale.raw = scale, scale * 2
+        self.assertEqual(self.magnifier.transform.scale.x, scale)
+        self.assertEqual(self.magnifier.transform.scale.y, 2 * scale)
+        delay_for_visualize(1)
+        self.magnifier.transform.reset()
+        self.assertEqual(self.magnifier.transform, self.magnifier.transform.default)
+        delay_for_visualize(1)
+        mag.set_transform(self.window.magnifier_hwnd, scale)
+        self.assertEqual(self.magnifier.transform.scale.raw, (scale, scale))
+        delay_for_visualize(1)
+        mag.set_transform(self.window.magnifier_hwnd, (scale, scale * 2))
+        self.assertEqual(self.magnifier.transform.scale.raw, (scale, 2 * scale))
+        delay_for_visualize(1)
+        mag.set_transform(self.window.magnifier_hwnd, (scale, scale * 2), (100.0, 150.0))
+        self.assertEqual(self.magnifier.transform.scale.raw, (scale, 2 * scale))
+        self.assertEqual(self.magnifier.transform.offset.raw, (100.0, 150.0))
+        self.assertEqual(self.magnifier.transform.pair, mag.get_transform(self.window.magnifier_hwnd))
 
     def test_idempotent(self):
-        last = self.magnifier.scale.value
-        self.magnifier.scale.value.pair = last.pair
-        self.assertEqual(self.magnifier.scale.value.pair, last.pair)
-        self.magnifier.scale.reset()
-        self.assertEqual(self.magnifier.scale.raw, self.magnifier.scale.default.raw)
+        last = self.magnifier.transform.scale
+        self.magnifier.transform.scale = last
+        self.assertEqual(self.magnifier.transform.scale, last)
+        self.magnifier.transform.reset()
+        self.assertEqual(self.magnifier.transform, self.magnifier.transform.default)
+        self.assertNotEqual(id(self.magnifier.transform), id(self.magnifier.transform.default))
 
     def test_exclusion_filters(self):
         self.magnifier.color_effect.raw = mag.const.COLOR_INVERSION_EFFECT
@@ -255,7 +306,7 @@ class MagnificationControlWindowTest(unittest.TestCase):
         self.assertEqual(self.magnifier.filters.raw, result_list)
         delay_for_visualize(1)
         self.magnifier.filters.reset()
-        self.assertEqual(self.magnifier.filters.raw, self.magnifier.filters.default)
+        self.assertEqual(self.magnifier.filters, self.magnifier.filters.default)
         delay_for_visualize(1)
         self.assertRaises(RuntimeError, mag.get_filters, 0)
 

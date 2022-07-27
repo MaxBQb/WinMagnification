@@ -1,17 +1,17 @@
 """
-Additional tools used primary in wrapper
-
-Author: MaxBQb
-Docs: https://docs.microsoft.com/en-us/windows/win32/api/_magapi/
-Header: https://pastebin.com/Lh82NjjM
+| Additional tools used primary in wrapper
+| Author: MaxBQb
 """
+from __future__ import annotations
+
 import contextlib
-import threading
 import ctypes
+import ctypes.wintypes
 import functools
+import threading
 import typing
 
-from .types import RectangleRaw
+from win_magnification.types import Rectangle
 
 P = [typing.Any]
 if typing.TYPE_CHECKING:
@@ -25,9 +25,9 @@ def handle_win_last_error(function_result: bool):
         raise ctypes.WinError()
 
 
-def raise_win_errors(win_function: typing.Callable[P, bool]) -> typing.Callable[P, None]:
+def raise_win_errors(win_function: typing.Callable[P, bool]) -> typing.Callable[P, None]:  # type: ignore
     @functools.wraps(win_function)
-    def wrapper(*args: 'P.args', **kwargs: 'P.kwargs') -> None:
+    def wrapper(*args: 'P.args', **kwargs: 'P.kwargs') -> None:  # type: ignore
         handle_win_last_error(win_function(*args, **kwargs))
     return wrapper
 
@@ -46,7 +46,7 @@ def to_c_array(matrix: tuple, content_type=ctypes.c_float):
     return (content_type * len(matrix))(*matrix)
 
 
-def to_py_rectangle(rectangle: ctypes.wintypes.RECT) -> RectangleRaw:
+def to_py_rectangle(rectangle: ctypes.wintypes.RECT) -> Rectangle:
     # noinspection PyTypeChecker
     return (  # type: ignore
         rectangle.left,
