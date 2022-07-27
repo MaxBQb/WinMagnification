@@ -62,12 +62,17 @@ class Vector2(_utils.WrappedField[typing.Tuple[float, float]]):
         super().__init__(datasource)
 
     @property
-    def same(self) -> float:
+    def same(self) -> typing.Optional[float]:
         """
         | Get/set same value from/to (x, y)
+        | Or None if values differs
         | |Accessors: Get Set|
         """
-        return self.x
+        with self.batch():
+            return _utils.ensure_same(
+                self.x,
+                self.y,
+            )
 
     @same.setter
     def same(self, value: float):
@@ -130,12 +135,17 @@ class FullscreenOffsetWrapper(_utils.WrappedField[typing.Tuple[int, int]]):
         super().__init__(datasource)
 
     @property
-    def same(self) -> int:
+    def same(self) -> typing.Optional[int]:
         """
         | Get/set same value from/to (x, y)
+        | Or None if values differs
         | |Accessors: Get Set|
         """
-        return self.x
+        with self.batch():
+            return _utils.ensure_same(
+                self.x,
+                self.y,
+            )
 
     @same.setter
     def same(self, value: int):
@@ -207,12 +217,17 @@ class RectangleWrapper(_utils.WrappedField['types.Rectangle']):
             self.left, self.top = value
 
     @property
-    def start_same(self) -> int:
+    def start_same(self) -> typing.Optional[int]:
         """
         | Get/set same value from/to (left, top)
+        | Or None if values differs
         | |Accessors: Get Set|
         """
-        return self.left
+        with self.batch():
+            return _utils.ensure_same(
+                self.left,
+                self.top,
+            )
 
     @start_same.setter
     def start_same(self, value: int):
@@ -232,24 +247,36 @@ class RectangleWrapper(_utils.WrappedField['types.Rectangle']):
             self.right, self.bottom = value
 
     @property
-    def end_same(self) -> int:
+    def end_same(self) -> typing.Optional[int]:
         """
         | Get/set same value from/to (right, bottom)
+        | Or None if values differs
         | |Accessors: Get Set|
         """
-        return self.right
+        with self.batch():
+            return _utils.ensure_same(
+                self.right,
+                self.bottom,
+            )
 
     @end_same.setter
     def end_same(self, value: int):
         self.end = value, value
 
     @property
-    def same(self) -> int:
+    def same(self) -> typing.Optional[int]:
         """
         | Get/set same value from/to (left, top, right, bottom)
+        | Or None if values differs
         | |Accessors: Get Set|
         """
-        return self.left
+        with self.batch():
+            return _utils.ensure_same(
+                self.left,
+                self.top,
+                self.right,
+                self.bottom,
+            )
 
     @same.setter
     def same(self, value: int):

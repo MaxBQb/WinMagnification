@@ -238,9 +238,11 @@ class MagnificationControlWindowTest(unittest.TestCase):
         self.assertEqual(self.magnifier.source.raw, self.window.current_rectangle)
         with self.magnifier.source.batch() as source:
             source.same = -1
+            self.assertEqual(source.same, -1)
             source.start_same = 0
+            self.assertEqual(source.start_same, 0)
             source.end_same = 8
-            self.assertEqual(source.same, source.start_same)
+            self.assertEqual(source.same, None)
             self.assertEqual(source.right, source.end_same)
             self.assertEqual((0, 0), source.start)
             self.assertEqual((8, 8), source.end)

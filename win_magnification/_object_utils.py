@@ -364,3 +364,10 @@ class WrappedField(PropertiesObserver, typing.Generic[T]):
     def reset(self):
         """Resets value of wrapped field to :attr:`.default`"""
         del self.raw
+
+
+def ensure_same(*values: T) -> typing.Optional[T]:
+    pattern = values[0]
+    if all(value == pattern for value in values):
+        return pattern
+    return None
