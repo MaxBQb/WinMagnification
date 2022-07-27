@@ -129,8 +129,27 @@ class NoControlWindowTest(unittest.TestCase):
         self.assertEqual(self.magnifier.transform.raw, last.raw)
 
     def test_gradation(self):
-        for i in range(100+1):
+        for i in range(1, 100+1):
             self.magnifier.color_effect.raw = mag.effects.inversion(i / 100.0)
+            delay_for_visualize(0.01)
+        self.assertEqual(self.magnifier.color_effect.raw, mag.const.COLOR_INVERSION_EFFECT)
+        delay_for_visualize(1)
+        with self.magnifier.color_effect.batch() as effect:
+            self.assertRaises(TypeError, effect.make_transition, end=mag.const.COLOR_NO_EFFECT, start=1)
+            self.assertRaises(TypeError, effect.make_transition, end=1)
+        self.magnifier.color_effect.make_transition(end=mag.const.COLOR_NO_EFFECT)
+        self.assertEqual(self.magnifier.color_effect.raw, mag.const.COLOR_INVERSION_EFFECT)
+        for i in range(100):
+            self.magnifier.color_effect.transition_power += 0.01
+            delay_for_visualize(0.01)
+        self.assertEqual(self.magnifier.color_effect.raw, mag.const.DEFAULT_COLOR_EFFECT)
+        delay_for_visualize(1)
+        with self.magnifier.color_effect.batch() as effect:
+            effect.from_transition(mag.effects.inversion, 0)
+            self.assertEqual(effect.transition, mag.effects.inversion)
+        self.assertEqual(self.magnifier.color_effect.raw, mag.const.DEFAULT_COLOR_EFFECT)
+        for i in range(100):
+            self.magnifier.color_effect.transition_power += 0.01
             delay_for_visualize(0.01)
         self.assertEqual(self.magnifier.color_effect.raw, mag.const.COLOR_INVERSION_EFFECT)
 

@@ -240,9 +240,11 @@ class WrappedField(PropertiesObserver, typing.Generic[T]):
     _DEFAULT: WrappedFieldType  # type: ignore
 
     def __init__(
-        self,
-        datasource: typing.Optional[DataSource[T]] = None
+            self,
+            datasource: typing.Optional[DataSource[T]] = None
     ):
+        self._source_dependent = set()
+
         def set_value(x: T):
             with self.batch():
                 self._raw = x
@@ -262,7 +264,9 @@ class WrappedField(PropertiesObserver, typing.Generic[T]):
                 self.raw = self._raw
 
         self.subscribe(set_raw)
-        self._subscribe_initial()
+
+    def _subscribe_initial(self):
+        super()._subscribe_initial()
         self._source_dependent = set(self._properties_observed)
 
     def __getattribute__(self, item):
@@ -296,7 +300,7 @@ class WrappedField(PropertiesObserver, typing.Generic[T]):
 
     @property
     def _raw(self) -> T:
-        return None
+        return None  # type: ignore
 
     @_raw.setter
     def _raw(self, value: T):

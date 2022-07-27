@@ -86,6 +86,7 @@ autodoc_type_aliases = {
     'types.RectangleRaw': 'Tuple[int, int, int, int]',
     'T': 'T',
     'WrappedFieldType': 'WrappedFieldType',
+    'Transition': 'Transition',
 }
 autodoc_typehints_format = 'short'
 

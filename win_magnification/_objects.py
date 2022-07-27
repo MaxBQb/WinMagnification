@@ -10,7 +10,35 @@ from win_magnification import _functional_wrapper as _wrapper2
 from win_magnification import _object_utils as _utils
 from win_magnification import _wrapper
 from win_magnification import const
+from win_magnification import tools
 from win_magnification import types
+
+LM = typing.TypeVar('LM', bound=typing.Tuple)
+
+
+class MatrixWrapper(tools.Matrix, _utils.WrappedField[LM], typing.Generic[LM]):
+    """
+    Observable matrix wrapper
+    """
+    _SIZE = 4
+
+    def __init__(
+        self,
+        datasource: typing.Optional[_utils.DataSource[LM]] = None,
+    ):
+        tools.Matrix.__init__(self)
+        self._resize(self._SIZE)
+        _utils.WrappedField.__init__(self, datasource)
+        self._inner_observables.add('_value')
+        self._subscribe_initial()
+
+    @property
+    def _raw(self) -> LM:
+        return self._value
+
+    @_raw.setter
+    def _raw(self, value: LM):
+        self._value = value
 
 
 class Vector2(_utils.WrappedField[typing.Tuple[float, float]]):
@@ -238,13 +266,107 @@ class SourceRectangleWrapper(RectangleWrapper):
     _DEFAULT_RAW = const.DEFAULT_SOURCE
 
 
-class ColorMatrixWrapper(_utils.WrappedField['types.ColorMatrix']):
+class ColorMatrixWrapper(MatrixWrapper['types.ColorMatrix']):
     """
     Use to apply color transformations
 
     .. include:: ../shared/wrapper/common.rst
     """
+    _SIZE = const.COLOR_MATRIX_SIZE
     _DEFAULT_RAW = const.DEFAULT_COLOR_EFFECT
+
+    def __init__(
+        self,
+        datasource: typing.Optional[_utils.DataSource[LM]] = None,
+    ):
+        super().__init__(datasource)
+        self._transition: typing.Optional[tools.Transition] = None
+        self._transition_power = 0.0
+
+    @property
+    def transition_power(self) -> float:
+        """
+        | Applies color effect transition
+        | Use :meth:`make_transition` or :meth:`from_transition` to setup
+          and apply transition from **start** to **end** with scale of **value**
+          then you can change **value** with this method:
+        | **value** = 0 |=> **start**
+        | **value** = 1 |=> **end**
+        | 0 <= **value** <= 1 |=> **start** moved towards **end**
+        | **value** > 1 |=> **start** moved towards **end** out of **end** bound
+        | **value** < 0 |=> **end** moved towards **start** out of **start** bound
+        | |Accessors: Get Set|
+        """
+        return self._transition_power
+
+    @transition_power.setter
+    def transition_power(self, value: typing.Union[float, int]):
+        value = float(value)
+        self._transition_power = value
+        if self._transition:
+            self.linear = self._transition(value)
+
+    @property
+    def transition(self) -> typing.Optional[tools.Transition]:
+        """
+        | Current :data:`.Transition` or None if not set yet
+        | |Accessors: Get|
+        """
+        return self._transition
+
+    def make_transition(
+        self,
+        end: tools.Matrix.Any,
+        start: typing.Optional[tools.Matrix.Any] = None,
+        initial_power: typing.Optional[typing.Union[float, int]] = None,
+    ):
+        """
+        | Setup and apply transition from **start** to **end**
+          with scale of **initial_power**:
+        | **initial_power** = 0 |=> **start**
+        | **initial_power** = 1 |=> **end**
+        | 0 <= **initial_power** <= 1 |=> **start** moved towards **end**
+        | **initial_power** > 1 |=> **start** moved towards **end** out of **end** bound
+        | **initial_power** < 0 |=> **end** moved towards **start** out of **start** bound
+
+        :param start: :abbr:`Initial state (transit from)` (default: current color effect)
+        :param end: :abbr:`Final state (transit to)`
+        :param initial_power: Float scale of transition
+            normally stays between :abbr:`0 (start)` and :abbr:`1 (end)` to get transition effect
+            (default: last value used or 0)
+        """
+        if start is None:
+            start = self
+        else:
+            start = self.from_any(start)
+            if start is None:
+                raise TypeError('Unable to convert `start` value to matrix')
+        end = self.from_any(end)
+        if end is None:
+            raise TypeError('Unable to convert `end` value to matrix')
+
+        self.from_transition(tools.get_transition(
+            start.linear,
+            end.linear,
+        ), initial_power)
+
+    def from_transition(
+        self,
+        transition: tools.Transition,
+        initial_power: typing.Optional[typing.Union[float, int]] = None,
+    ):
+        """
+        Setup and apply transition from existing one
+
+        :param transition: one of :mod:`.effects` or copy of :attr:`last used one <transition>`
+        :param initial_power: Float start scale of transition
+            normally stays between :abbr:`0 (start)` and :abbr:`1 (end)` to get transition effect
+            (default: last value used or 0)
+        """
+        if initial_power is None:
+            initial_power = self.transition_power
+        self._transition = transition
+        self.transition_power = initial_power
 
 
 class FiltersListWrapper(_utils.WrappedField[tuple]):
