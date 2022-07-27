@@ -7,7 +7,7 @@ Author: MaxBQb |
 import typing
 
 
-ColorMatrix: typing.TypeAlias = typing.Tuple[
+ColorMatrix: 'typing.TypeAlias' = typing.Tuple[
     float, float, float, float, float,
     float, float, float, float, float,
     float, float, float, float, float,
@@ -31,7 +31,7 @@ r += x   g += x   b += x   a += x   1
 | `Read more <https://docs.microsoft.com/en-us/windows/win32/gdiplus/-gdiplus-using-a-color-matrix-to-transform-a-single-color-use>`_
 """
 
-TransformationMatrix: typing.TypeAlias = typing.Tuple[
+TransformationMatrix: 'typing.TypeAlias' = typing.Tuple[
     float, float, float,
     float, float, float,
     float, float, float,
@@ -67,7 +67,7 @@ TransformationMatrix: typing.TypeAlias = typing.Tuple[
    | Where (0, 0) is |up-left| upper-left corner of magnifier window
 """
 
-SimpleTransform: typing.TypeAlias = typing.Tuple[
+SimpleTransform: 'typing.TypeAlias' = typing.Tuple[
     typing.Tuple[float, float],
     typing.Tuple[float, float],
 ]
@@ -80,7 +80,7 @@ SimpleTransform: typing.TypeAlias = typing.Tuple[
    **Offset** starts from |up-left| upper-left corner of magnification window
 """
 
-FullscreenTransform: typing.TypeAlias = typing.Tuple[float, typing.Tuple[int, int]]
+FullscreenTransform: 'typing.TypeAlias' = typing.Tuple[float, typing.Tuple[int, int]]
 """
 | Tuple of **magnification factor** and **offset** for the full-screen magnifier:
 | **magnification factor** = 1.0 |=> screen content is not being magnified.
@@ -90,12 +90,12 @@ FullscreenTransform: typing.TypeAlias = typing.Tuple[float, typing.Tuple[int, in
 | -262144 <= offset(x, y) <= 262144.
 """
 
-Rectangle: typing.TypeAlias = typing.Tuple[int, int, int, int]
+Rectangle: 'typing.TypeAlias' = typing.Tuple[int, int, int, int]
 """
 Tuple of ints: (|left| **left**, |up| **top**, |right| **right**, |down| **bottom**)
 """
 
-InputTransform: typing.TypeAlias = typing.Tuple[bool, Rectangle, Rectangle]
+InputTransform: 'typing.TypeAlias' = typing.Tuple[bool, Rectangle, Rectangle]
 """
 | Tuple of **is_enabled**, **source** and **destination**:
 - **is_enabled**: True if input translation is enabled.

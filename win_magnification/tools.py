@@ -212,7 +212,7 @@ def get_simple_color_matrix(
     )
 
 
-Transition: typing.TypeAlias = typing.Callable[[typing.Union[float, int]], 'Matrix.Linear']
+Transition: 'typing.TypeAlias' = typing.Callable[[typing.Union[float, int]], 'Matrix.Linear']
 """
 Function with predefined transition matrix
 makes predefined start moved towards predefined end, 
@@ -337,27 +337,27 @@ class Matrix:
 
     """
 
-    Linear: typing.TypeAlias = typing.Tuple[float, ...]
+    Linear: 'typing.TypeAlias' = typing.Tuple[float, ...]
     """
     :abbr:`Matrix (linear algebra term)` represented as flat tuple of floats
     """
 
-    Square: typing.TypeAlias = typing.Tuple[typing.Tuple[float, ...], ...]
+    Square: 'typing.TypeAlias' = typing.Tuple[typing.Tuple[float, ...], ...]
     """
     :abbr:`Matrix (linear algebra term)` represented as tuple of tuples of floats
     """
 
-    LinearLike: typing.TypeAlias = typing.Collection[typing.Union[float, int]]
+    LinearLike: 'typing.TypeAlias' = typing.Collection[typing.Union[float, int]]
     """
     :abbr:`Matrix (linear algebra term)` represented as collection of numbers
     """
 
-    SquareLike: typing.TypeAlias = typing.Collection[typing.Collection[typing.Union[float, int]]]
+    SquareLike: 'typing.TypeAlias' = typing.Collection[typing.Collection[typing.Union[float, int]]]
     """
     :abbr:`Matrix (linear algebra term)` represented as collection of collections of numbers
     """
 
-    Any: typing.TypeAlias = typing.Union[
+    Any: 'typing.TypeAlias' = typing.Union[
         LinearLike,
         SquareLike,
         'Matrix',
