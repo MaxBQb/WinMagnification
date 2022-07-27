@@ -95,16 +95,16 @@ autodoc_typehints_format = 'short'
 html_static_path = []  # type: ignore
 
 rst_prolog = """
-.. |upleft| replace:: :octicon:`arrow-up-left;1em;sd-text-success`
-.. |downright| replace:: :octicon:`arrow-down-right;1em;sd-text-success`
+.. |up-left| replace:: :octicon:`arrow-up-left;1em;sd-text-success`
+.. |down-right| replace:: :octicon:`arrow-down-right;1em;sd-text-success`
 .. |up| replace:: :octicon:`arrow-up;1em;sd-text-success`
 .. |down| replace:: :octicon:`arrow-down;1em;sd-text-success`
 .. |left| replace:: :octicon:`arrow-left;1em;sd-text-success`
 .. |right| replace:: :octicon:`arrow-right;1em;sd-text-success`
-.. |accessor getter| replace:: :octicon:`eye;1em;sd-text-warning` :bdg-warning:`Get`
-.. |accessor setter| replace:: :octicon:`pencil;1em;sd-text-success` :bdg-success:`Set`
-.. |accessor deleter| replace:: :octicon:`trash;1em;sd-text-danger` :bdg-danger:`Delete`
-.. |accessors: get| replace:: **Accessors**: |accessor getter| :bdg-success-line:`Readonly`
-.. |accessors: get set| replace:: **Accessors**: |accessor getter| |accessor setter|
-.. |accessors: get set delete| replace:: **Accessors**: |accessor getter| |accessor setter| |accessor deleter|
+.. |accessor getter| replace:: :octicon:`eye;1em;sd-text-warning` :bdg-link-warning:`Get <https://docs.python.org/3/library/functions.html#getattr>`
+.. |accessor setter| replace:: :octicon:`pencil;1em;sd-text-success` :bdg-link-success:`Set <https://docs.python.org/3/library/functions.html#setattr>`
+.. |accessor deleter| replace:: :octicon:`trash;1em;sd-text-danger` :bdg-link-danger:`Delete <https://docs.python.org/3/library/functions.html#delattr>`
+.. |Accessors: Get| replace:: **Accessors**: |accessor getter| :bdg-link-success-line:`Readonly <https://docs.python.org/3/library/functions.html?highlight=read-only#property>`
+.. |Accessors: Get Set| replace:: **Accessors**: |accessor getter| |accessor setter|
+.. |Accessors: Get Set Delete| replace:: **Accessors**: |accessor getter| |accessor setter| |accessor deleter|
 """

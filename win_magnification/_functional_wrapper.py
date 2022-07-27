@@ -61,7 +61,7 @@ def set_transform(
 
     :param hwnd: The handle of the magnification window.
     :param scale: Magnification factor, or it's separate x, y components
-    :param offset: Magnifier offset from |upleft| left upper corner
+    :param offset: Magnifier offset from |up-left| left upper corner
     """
     set_transform_advanced(hwnd, tools.get_transform_matrix(
         *(scale if isinstance(scale, tuple) else (scale, scale)),
@@ -95,7 +95,7 @@ def to_simple_transform(matrix: types.TransformationMatrix) -> types.SimpleTrans
 def get_transform(hwnd: int) -> types.SimpleTransform:
     """
     Use to get the magnification transformation (**scale**, **offset**) on the window provided by the window handle
-    **Offset** counts from |upleft| left-upper corner of magnification window
+    **Offset** counts from |up-left| left-upper corner of magnification window
 
     :param hwnd: The handle of the magnification window.
     :return: Tuple of **scale** (x, y) and **offset** (x, y)

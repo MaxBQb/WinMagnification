@@ -156,11 +156,12 @@ class DataSource(typing.Generic[T]):
     """
     Wraps interaction with outer world data sources
     """
+
     def __init__(self):
         self.use_cache: bool = False
         """
         | Save last value or get fresh one each time?
-        | |accessors: get set|
+        | |Accessors: Get Set|
         """
         self._has_cache = False
         self._cache: T = None
@@ -175,7 +176,7 @@ class DataSource(typing.Generic[T]):
     def has_cache(self) -> bool:
         """
         | True if last value saved, and it should be used instead of getting fresh one
-        | |accessors: get|
+        | |Accessors: Get|
         """
         return self._has_cache and self.use_cache
 
@@ -184,7 +185,7 @@ class DataSource(typing.Generic[T]):
         """
         | Value from datasource
         | When :attr:`.use_cache` enabled stores and reuses the last value retrieved
-        | |accessors: get set|
+        | |Accessors: Get Set|
         """
         if self.use_cache:
             if not self._has_cache:
@@ -326,7 +327,7 @@ class WrappedField(PropertiesObserver, typing.Generic[T]):
     def default(self: WrappedFieldType) -> WrappedFieldType:
         """
         | Default value of wrapped field
-        | |accessors: get|
+        | |Accessors: Get|
         """
         if not hasattr(self, '_DEFAULT'):
             self.__class__._DEFAULT = self.__class__(
@@ -343,7 +344,7 @@ class WrappedField(PropertiesObserver, typing.Generic[T]):
     def raw(self) -> T:
         """
         | Raw value with no wrappers used
-        | |accessors: get set delete|
+        | |Accessors: Get Set Delete|
         | **Deleter**: resets value with :attr:`.default`
         """
         return self._datasource.data

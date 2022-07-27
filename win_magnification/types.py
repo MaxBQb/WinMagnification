@@ -6,6 +6,7 @@ Author: MaxBQb |
 """
 import typing
 
+
 ColorMatrix: typing.TypeAlias = typing.Tuple[
     float, float, float, float, float,
     float, float, float, float, float,
@@ -63,7 +64,7 @@ TransformationMatrix: typing.TypeAlias = typing.Tuple[
 
    | **X** Offset from left to right |right|
    | **Y** Offset from up to down |down|
-   | Where (0, 0) is |upleft| upper-left corner of magnifier window
+   | Where (0, 0) is |up-left| upper-left corner of magnifier window
 """
 
 SimpleTransform: typing.TypeAlias = typing.Tuple[
@@ -76,7 +77,7 @@ SimpleTransform: typing.TypeAlias = typing.Tuple[
 | **offset**: (x, y)
 
 .. hint::
-   **Offset** starts from |upleft| upper-left corner of magnification window
+   **Offset** starts from |up-left| upper-left corner of magnification window
 """
 
 FullscreenTransform: typing.TypeAlias = typing.Tuple[float, typing.Tuple[int, int]]
@@ -85,7 +86,7 @@ FullscreenTransform: typing.TypeAlias = typing.Tuple[float, typing.Tuple[int, in
 | **magnification factor** = 1.0 |=> screen content is not being magnified.
 | 1.0 < **magnification factor** <= 4096.0 |=> scale factor for magnification.
 | **magnification factor** < 1.0 is **not valid**.
-| The **offset** is relative to the |upleft| upper-left corner of the primary monitor, in unmagnified coordinates.
+| The **offset** is relative to the |up-left| upper-left corner of the primary monitor, in unmagnified coordinates.
 | -262144 <= offset(x, y) <= 262144.
 """
 

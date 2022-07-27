@@ -23,7 +23,7 @@ def get_matrix_side(elements_count: int, dimension_count=2):
     :param dimension_count: Array = 1, matrix = 2, cube = 3, etc.
     :return: Matrix rows/columns count
     """
-    return int(math.pow(elements_count, 1.0/dimension_count))
+    return int(math.pow(elements_count, 1.0 / dimension_count))
 
 
 def pos_for_matrix(array_len: int, *coords: int) -> int:
@@ -158,8 +158,8 @@ def get_transform_matrix(x=1.0, y=1.0, offset_x=0.0, offset_y=0.0) -> types.Tran
 
     :param x: Horizontal magnification
     :param y: Vertical magnification
-    :param offset_x: Horizontal |right| offset from |upleft| left upper corner of window
-    :param offset_y: Vertical |down| offset from |upleft| left upper corner of window
+    :param offset_x: Horizontal |right| offset from |up-left| left upper corner of window
+    :param offset_y: Vertical |down| offset from |up-left| left upper corner of window
     :return: Screen transformation matrix
     """
     if offset_y != 0.0:
@@ -230,8 +230,8 @@ def get_transition(start: typing.Tuple, end: typing.Tuple):
     >>> move(-1.4)
     (-14.0, -14.0, -14.0)
 
-    :param start: Initial state (transit from)
-    :param end: Final state (transit to)
+    :param start: :abbr:`Initial state (transit from)`
+    :param end: :abbr:`Final state (transit to)`
     :return: Transition function from **start** to **end** matrix
     """
     diff = tuple(
@@ -244,12 +244,13 @@ def get_transition(start: typing.Tuple, end: typing.Tuple):
         with scale of value
 
         :param value: Float scale of transition
-        normally stays between 0 (start) and 1 (end) to get transition effect
+            normally stays between :abbr:`0 (start)` and :abbr:`1 (end)` to get transition effect
         :return: Start matrix moved towards end matrix with value scale
         """
         return tuple(
             start[i] + diff[i] * value for i in range(len(start))
         )
+
     return transit
 
 
@@ -301,6 +302,8 @@ def replace(func: typing.Callable) -> typing.Callable:
     :param func: Function which will replace any other
     :return: Wrapper, that acts like **func**
     """
+
     def wrapper(inner_func: typing.Callable) -> typing.Callable:
         return functools.wraps(inner_func)(func)
+
     return wrapper

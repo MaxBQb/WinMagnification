@@ -24,12 +24,12 @@ class Vector2(_utils.WrappedField[typing.Tuple[float, float]]):
         self.x: float = 0.0
         """
         | Horizontal component
-        | |accessors: get set delete|
+        | |Accessors: Get Set Delete|
         """
         self.y: float = 0.0
         """
         | Vertical component
-        | |accessors: get set delete|
+        | |Accessors: Get Set Delete|
         """
         super().__init__(datasource)
 
@@ -37,7 +37,7 @@ class Vector2(_utils.WrappedField[typing.Tuple[float, float]]):
     def same(self) -> float:
         """
         | Get/set same value from/to (x, y)
-        | |accessors: get set|
+        | |Accessors: Get Set|
         """
         return self.x
 
@@ -67,7 +67,7 @@ class TransformScale(Vector2):
 class TransformOffset(Vector2):
     """
     Magnifier window target offset (x |down|, y |right|)
-    from |upleft| upper-left corner of magnifier screen
+    from |up-left| upper-left corner of magnifier screen
 
     .. include:: ../shared/wrapper/component.rst
     """
@@ -77,7 +77,7 @@ class TransformOffset(Vector2):
 class FullscreenOffsetWrapper(_utils.WrappedField[typing.Tuple[int, int]]):
     """
     | Fullscreen magnification target offset
-    | Relative to the |upleft| upper-left corner of the primary monitor
+    | Relative to the |up-left| upper-left corner of the primary monitor
 
     .. include:: ../shared/wrapper/component.rst
     """
@@ -90,14 +90,14 @@ class FullscreenOffsetWrapper(_utils.WrappedField[typing.Tuple[int, int]]):
         self.x: int = 0
         """
         | Horizontal |right| offset component
-        | Starts from |upleft| upper-left corner
-        | |accessors: get set delete|
+        | Starts from |up-left| upper-left corner
+        | |Accessors: Get Set Delete|
         """
         self.y: int = 0
         """
         | Vertical |down| offset component
-        | Starts from |upleft| upper-left corner
-        | |accessors: get set delete|
+        | Starts from |up-left| upper-left corner
+        | |Accessors: Get Set Delete|
         """
         super().__init__(datasource)
 
@@ -105,7 +105,7 @@ class FullscreenOffsetWrapper(_utils.WrappedField[typing.Tuple[int, int]]):
     def same(self) -> int:
         """
         | Get/set same value from/to (x, y)
-        | |accessors: get set|
+        | |Accessors: Get Set|
         """
         return self.x
 
@@ -125,7 +125,7 @@ class FullscreenOffsetWrapper(_utils.WrappedField[typing.Tuple[int, int]]):
 
 class RectangleWrapper(_utils.WrappedField['types.Rectangle']):
     """
-    Pair of two points (start |upleft|, end |downright|)
+    Pair of two points (start |up-left|, end |down-right|)
 
     .. include:: ../shared/wrapper/component.rst
     """
@@ -137,23 +137,23 @@ class RectangleWrapper(_utils.WrappedField['types.Rectangle']):
     ):
         self.left: int = 0
         """
-        | |left| x-component of start point |upleft|
-        | |accessors: get set delete|
+        | |left| x-component of start point |up-left|
+        | |Accessors: Get Set Delete|
         """
         self.top: int = 0
         """
-        | |up| y-component of start point |upleft|
-        | |accessors: get set delete|
+        | |up| y-component of start point |up-left|
+        | |Accessors: Get Set Delete|
         """
         self.right: int = 0
         """
-        | |right| x-component of end point |downright|
-        | |accessors: get set delete|
+        | |right| x-component of end point |down-right|
+        | |Accessors: Get Set Delete|
         """
         self.bottom: int = 0
         """
-        | |down| y-component of end point |downright|
-        | |accessors: get set delete|
+        | |down| y-component of end point |down-right|
+        | |Accessors: Get Set Delete|
         """
         super().__init__(datasource)
 
@@ -169,7 +169,7 @@ class RectangleWrapper(_utils.WrappedField['types.Rectangle']):
     def start(self) -> typing.Tuple[int, int]:
         """
         | Get/set value from/to (left, top)
-        | |accessors: get set|
+        | |Accessors: Get Set|
         """
         return self.left, self.top
 
@@ -182,7 +182,7 @@ class RectangleWrapper(_utils.WrappedField['types.Rectangle']):
     def start_same(self) -> int:
         """
         | Get/set same value from/to (left, top)
-        | |accessors: get set|
+        | |Accessors: Get Set|
         """
         return self.left
 
@@ -194,7 +194,7 @@ class RectangleWrapper(_utils.WrappedField['types.Rectangle']):
     def end(self) -> typing.Tuple[int, int]:
         """
         | Get/set value from/to (right, bottom)
-        | |accessors: get set|
+        | |Accessors: Get Set|
         """
         return self.right, self.bottom
 
@@ -207,7 +207,7 @@ class RectangleWrapper(_utils.WrappedField['types.Rectangle']):
     def end_same(self) -> int:
         """
         | Get/set same value from/to (right, bottom)
-        | |accessors: get set|
+        | |Accessors: Get Set|
         """
         return self.right
 
@@ -219,7 +219,7 @@ class RectangleWrapper(_utils.WrappedField['types.Rectangle']):
     def same(self) -> int:
         """
         | Get/set same value from/to (left, top, right, bottom)
-        | |accessors: get set|
+        | |Accessors: Get Set|
         """
         return self.left
 
@@ -240,7 +240,7 @@ class SourceRectangleWrapper(RectangleWrapper):
 
 class ColorMatrixWrapper(_utils.WrappedField['types.ColorMatrix']):
     """
-    Use for apply color transformations
+    Use to apply color transformations
 
     .. include:: ../shared/wrapper/common.rst
     """
@@ -271,13 +271,13 @@ class FullscreenTransformWrapper(_utils.WrappedField['types.FullscreenTransform'
         self.scale: float = 0.0
         """
         | Fullscreen magnification factor
-        | |accessors: get set delete| 
+        | |Accessors: Get Set Delete| 
         """
         self.offset: FullscreenOffsetWrapper = FullscreenOffsetWrapper()
         """
         | Fullscreen magnification target offset
-        | Relative to the |upleft| upper-left corner of the primary monitor
-        | |accessors: get set delete|
+        | Relative to the |up-left| upper-left corner of the primary monitor
+        | |Accessors: Get Set Delete|
         """
         super().__init__(datasource)
 
@@ -305,20 +305,20 @@ class InputTransformWrapper(_utils.WrappedField['types.InputTransform']):
         self.enabled: bool = False
         """
         | Is input translation enabled
-        | |accessors: get set delete|
+        | |Accessors: Get Set Delete|
         """
         self.source: RectangleWrapper = RectangleWrapper()
         """
         | The source rectangle, in unmagnified screen coordinates,
           that defines the area of the screen that is magnified
-        | |accessors: get set delete|
+        | |Accessors: Get Set Delete|
         """
         self.destination: RectangleWrapper = RectangleWrapper()
         """
         | The destination rectangle, in screen coordinates,
           that defines the area of the screen where the magnified
           screen content is displayed.
-        | |accessors: get set delete|
+        | |Accessors: Get Set Delete|
         """
         super().__init__(datasource)
 
@@ -346,13 +346,13 @@ class TransformationMatrixWrapper(_utils.WrappedField['types.TransformationMatri
         self.scale: TransformScale = TransformScale()
         """
         | Magnifier window scale
-        | |accessors: get set delete| 
+        | |Accessors: Get Set Delete| 
         """
         self.offset: TransformOffset = TransformOffset()
         """
         | Magnifier window target offset
-        | Relative to the |upleft| upper-left corner of window
-        | |accessors: get set delete|
+        | Relative to the |up-left| upper-left corner of window
+        | |Accessors: Get Set Delete|
         """
         super().__init__(datasource)
 
@@ -368,7 +368,7 @@ class TransformationMatrixWrapper(_utils.WrappedField['types.TransformationMatri
     def pair(self) -> types.SimpleTransform:
         """
         | Tuple of (offset, scale), both of which are tuples of (x, y)
-        | |accessors: get set|
+        | |Accessors: Get Set|
         """
         with self.batch():
             return self.scale.raw, self.offset.raw
@@ -408,7 +408,7 @@ class FullscreenController:
     def transform(self) -> FullscreenTransformWrapper:
         """
         | Scale/offset fullscreen magnifier transformations
-        | |accessors: get|
+        | |Accessors: Get|
         """
         return self._transform
 
@@ -416,7 +416,7 @@ class FullscreenController:
     def color_effect(self) -> ColorMatrixWrapper:
         """
         | Color transformations
-        | |accessors: get|
+        | |Accessors: Get|
         """
         return self._color_effect
 
@@ -424,7 +424,7 @@ class FullscreenController:
     def input_transform(self) -> InputTransformWrapper:
         """
         | Input transformation for pen and touch input
-        | |accessors: get|
+        | |Accessors: Get|
         """
         return self._input_transform_transform
 
@@ -436,7 +436,7 @@ class FullscreenController:
         .. note::
            Doesn't reflect actual value, shows last used value instead
 
-        | |accessors: get set|
+        | |Accessors: Get Set|
         """
         return self._cursor_visible
 
@@ -455,7 +455,7 @@ class CustomWindowController:
         self.hwnd: int = 0
         """
         | Magnification window handle
-        | |accessors: get set|
+        | |Accessors: Get Set|
         """
         self._transform = TransformationMatrixWrapper(
             _utils.DataSource.dynamic(
@@ -489,7 +489,7 @@ class CustomWindowController:
     def transform(self) -> TransformationMatrixWrapper:
         """
         | Scale/offset magnifier transformations
-        | |accessors: get|
+        | |Accessors: Get|
         """
         return self._transform
 
@@ -497,7 +497,7 @@ class CustomWindowController:
     def color_effect(self) -> ColorMatrixWrapper:
         """
         | Color transformations
-        | |accessors: get|
+        | |Accessors: Get|
         """
         return self._color_effect
 
@@ -505,7 +505,7 @@ class CustomWindowController:
     def source(self) -> SourceRectangleWrapper:
         """
         | Source area, to get origin pixels from
-        | |accessors: get|
+        | |Accessors: Get|
         """
         return self._source
 
@@ -513,7 +513,7 @@ class CustomWindowController:
     def filters(self) -> FiltersListWrapper:
         """
         | Window filtration list
-        | |accessors: get|
+        | |Accessors: Get|
         """
         return self._filters
 
@@ -536,7 +536,7 @@ class WinMagnificationAPI:
     def fullscreen(self) -> FullscreenController:
         """
         | Gives access to fullscreen functions of Magnification API
-        | |accessors: get|
+        | |Accessors: Get|
         """
         return self.__fullscreen
 
@@ -545,7 +545,7 @@ class WinMagnificationAPI:
         """
         | Gives access to window (custom magnifier controller)
           functions of Magnification API
-        | |accessors: get|
+        | |Accessors: Get|
         """
         return self.__window
 
