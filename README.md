@@ -69,12 +69,12 @@ There are 3.5 groups of functions:
   + **get_input_transform**
 - Window (requires window creation as shown in [example](https://github.com/MaxBQb/WinMagnification/blob/master/example/windows_utils.py)),
 more powerful, but requires such things like custom window creation (hello from [pywin32](https://pypi.org/project/pywin32/)),
-[UiAccess](https://docs.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/user-account-control-allow-uiaccess-applications-to-prompt-for-elevation-without-using-the-secure-desktop) (Hard to obtain) if you need your magnifier [above everything](https://blog.adeltax.com/window-z-order-in-windows-10/), but you can simulate all fullscreen functions too:
+[UiAccess](https://docs.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/user-account-control-allow-uiaccess-applications-to-prompt-for-elevation-without-using-the-secure-desktop) (consider [`pyinstaller --uac-uiaccess`](https://pyinstaller.org/en/stable/man/pyinstaller.html?highlight=--uac-uiaccess#windows-specific-options)) if you need your magnifier [above everything](https://blog.adeltax.com/window-z-order-in-windows-10/), but you can simulate all fullscreen functions too:
   + get/set_color_effect
   + get/set_transform
   + get/set_source
   + get/set_filters (supports exclusion only, looks like excluded windows never exist for magnifier)
-- [UiAccess](https://docs.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/user-account-control-allow-uiaccess-applications-to-prompt-for-elevation-without-using-the-secure-desktop) required:
+- [UiAccess](https://docs.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/user-account-control-allow-uiaccess-applications-to-prompt-for-elevation-without-using-the-secure-desktop) required (consider [`pyinstaller --uac-uiaccess`](https://pyinstaller.org/en/stable/man/pyinstaller.html?highlight=--uac-uiaccess#windows-specific-options)):
   + **set_input_transform**
 - Other:
   + initialize
