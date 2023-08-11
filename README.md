@@ -1,5 +1,5 @@
 # WinMagnification
-[![Windows](https://svgshare.com/i/ZhY.svg)](https://svgshare.com/i/ZhY.svg)
+![Windows](https://img.shields.io/badge/platform-Windows-green)
 [![PyPI version shields.io](https://img.shields.io/pypi/v/WinMagnification.svg)](https://pypi.org/project/WinMagnification/)
 [![Documentation Status](https://readthedocs.org/projects/winmagnification/badge/?version=latest)](https://winmagnification.readthedocs.io/en/latest/)
 [![GitHub license](https://img.shields.io/github/license/MaxBQb/WinMagnification.svg)](https://github.com/MaxBQb/WinMagnification/blob/master/LICENSE.md)
